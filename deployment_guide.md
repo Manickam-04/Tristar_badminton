@@ -28,8 +28,8 @@ Before deploying, ensure all latest changes are committed and pushed to your Git
    ```bash
    git clone https://github.com/Manickam-04/Tristar_badminton.git
    ```
-   *(This will clone the code into `/home/manickam04/Tristar_badminton/`)*.
-   *(Note: Replace `manickam04` with your exact PythonAnywhere username in all paths below if it is different)*.
+   *(This will clone the code into `/home/manick33/Tristar_badminton/`)*.
+   *(Note: Your PythonAnywhere username is `manick33`)*.
 
 ---
 
@@ -41,10 +41,10 @@ From the same **Bash Console** in PythonAnywhere, configure your environment:
    ```bash
    mkvirtualenv tristar-env --python=python3.10
    ```
-   *(This creates and activates a virtual environment located at `/home/manickam04/.virtualenvs/tristar-env`)*.
+   *(This creates and activates a virtual environment located at `/home/manick33/.virtualenvs/tristar-env`)*.
 2. Install the application dependencies:
    ```bash
-   pip install -r /home/manickam04/Tristar_badminton/requirements.txt
+   pip install -r /home/manick33/Tristar_badminton/requirements.txt
    ```
 
 ---
@@ -56,8 +56,8 @@ From the same **Bash Console** in PythonAnywhere, configure your environment:
    - Select **Manual configuration** (do NOT choose the default Flask template—manual configuration is required for custom structures).
    - Select **Python 3.10**.
 3. Under the **Virtualenv** section on the Web tab, enter the path to the environment you created:
-   `/home/manickam04/.virtualenvs/tristar-env`
-4. Under the **Code** section, locate the link to your **WSGI configuration file** (it looks like `/var/www/manickam04_pythonanywhere_com_wsgi.py`). Click to edit it.
+   `/home/manick33/.virtualenvs/tristar-env`
+4. Under the **Code** section, locate the link to your **WSGI configuration file** (it looks like `/var/www/manick33_pythonanywhere_com_wsgi.py`). Click to edit it.
 5. Replace the entire contents of the WSGI file with the following script:
 
 ```python
@@ -65,12 +65,12 @@ import os
 import sys
 
 # 1. Add project path to python system paths
-project_home = '/home/manickam04/Tristar_badminton'
+project_home = '/home/manick33/Tristar_badminton'
 if project_home not in sys.path:
     sys.path.insert(0, project_home)
 
 # 2. Inject environment variables for database path, sessions, and credentials
-os.environ['DATABASE_PATH'] = '/home/manickam04/Tristar_badminton/badminton.db'
+os.environ['DATABASE_PATH'] = '/home/manick33/Tristar_badminton/badminton.db'
 os.environ['SECRET_KEY'] = 'hxkyfjmpwqydg304567_tristar_key'  # Custom secure session key
 os.environ['FLASK_DEBUG'] = 'False'
 os.environ['ADMIN_EMAIL'] = 'admin@tristar.com'
@@ -96,9 +96,9 @@ Instead of running a daemon thread (which PythonAnywhere might freeze during per
    - **Time**: Select a daily time (e.g., `02:00` AM UTC).
    - **Command**: Enter the absolute path to your virtual environment's python interpreter and call the database backup command:
      ```bash
-     /home/manickam04/.virtualenvs/tristar-env/bin/python /home/manickam04/Tristar_badminton/database.py backup
+     /home/manick33/.virtualenvs/tristar-env/bin/python /home/manick33/Tristar_badminton/database.py backup
      ```
-3. Click **Create**. This cron task will run daily, creating copies in `/home/manickam04/Tristar_badminton/backups/` and enforcing a 7-day retention limit automatically.
+3. Click **Create**. This cron task will run daily, creating copies in `/home/manick33/Tristar_badminton/backups/` and enforcing a 7-day retention limit automatically.
 
 ---
 
@@ -110,7 +110,7 @@ If your active database file becomes corrupted or you need to roll back to a pre
 2. Activate your virtual environment and run the interactive recovery script:
    ```bash
    workon tristar-env
-   cd /home/manickam04/Tristar_badminton/
+   cd /home/manick33/Tristar_badminton/
    python restore.py
    ```
 3. The restore utility will scan your `/backups/` directory and list available snapshots (sorted chronologically).
@@ -127,13 +127,13 @@ If your active database file becomes corrupted or you need to roll back to a pre
 1. Open a **Bash Console**.
 2. Delete the active database and backup files:
    ```bash
-   rm /home/manickam04/Tristar_badminton/badminton.db
-   rm -rf /home/manickam04/Tristar_badminton/backups/
+   rm /home/manick33/Tristar_badminton/badminton.db
+   rm -rf /home/manick33/Tristar_badminton/backups/
    ```
 3. Initialize the database schema completely fresh:
    ```bash
    workon tristar-env
-   python /home/manickam04/Tristar_badminton/database.py
+   python /home/manick33/Tristar_badminton/database.py
    ```
 
 ---
@@ -146,5 +146,5 @@ If your active database file becomes corrupted or you need to roll back to a pre
   - Scroll down to the **Static files** section.
   - Add a path entry:
     - **URL**: `/static/`
-    - **Directory**: `/home/manickam04/Tristar_badminton/static`
+    - **Directory**: `/home/manick33/Tristar_badminton/static`
   - Reload the web app.
