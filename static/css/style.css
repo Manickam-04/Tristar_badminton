@@ -1703,6 +1703,35 @@ select option {
     background: rgba(255, 255, 255, 0.01);
 }
 
+.status-cell-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.btn-table-download {
+    background: rgba(16, 185, 129, 0.08);
+    color: var(--color-accent);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    transition: var(--transition-fast);
+}
+
+.btn-table-download:hover {
+    background: var(--color-accent);
+    color: #061912;
+    border-color: var(--color-accent);
+}
+
 /* Slots Management layout */
 .slots-management-layout {
     display: grid;
