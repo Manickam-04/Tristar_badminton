@@ -12,7 +12,7 @@ app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_SECURE=not app.debug,
+    SESSION_COOKIE_SECURE=False, # Set to False to ensure compatibility on both HTTP and HTTPS
     SESSION_REFRESH_EACH_REQUEST=True
 )
 
