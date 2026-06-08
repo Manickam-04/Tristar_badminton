@@ -1,0 +1,786 @@
+{% extends "base.html" %}
+
+{% block title %}Tristar Badminton Academy - User Dashboard{% endblock %}
+
+{% block content %}
+<div class="profile-page-container">
+    
+    <!-- User Profile Hero Header -->
+    <div class="profile-hero-card glass-card">
+        <div class="user-avatar-circle">
+            <i class="fa-solid fa-user-astronaut"></i>
+        </div>
+        <div class="profile-hero-text">
+            <h2>Hello, <span id="profile-display-name">{{ user.name }}</span>!</h2>
+            <p style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                <span><i class="fa-solid fa-envelope text-accent"></i> <span id="profile-display-email">{{ user.email }}</span></span>
+                <span class="text-muted">|</span>
+                <span><i class="fa-solid fa-phone text-accent"></i> <span id="profile-display-mobile">{{ user.mobile or 'No Mobile' }}</span></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Profile Actions Bar -->
+    <div class="profile-actions-bar glass-card">
+        <div class="profile-actions">
+            <button class="btn-modal-confirm" onclick="openEditProfileModal()">
+                <i class="fa-solid fa-user-pen"></i> Edit Profile
+            </button>
+            <a href="{{ url_for('logout') }}" class="btn-modal-cancel">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </a>
+        </div>
+        <div>
+            <p style="color: var(--text-error); font-size: 16px; font-weight: 500;">
+                For refund after cancellation contact 9994093575.
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard Navigation Tabs -->
+    <div class="dashboard-tabs glass-card">
+        <button class="dash-tab active" id="tab-history-btn" onclick="switchDashTab('history')">
+            <i class="fa-solid fa-history"></i> Booking History
+        </button>
+        <button class="dash-tab" id="tab-support-btn" onclick="switchDashTab('support')">
+            <i class="fa-solid fa-headset"></i> Help & Support
+        </button>
+    </div>
+
+    <!-- TAB CONTENT: BOOKING HISTORY -->
+    <section class="dash-tab-panel" id="panel-history">
+        <div class="panel-section-title">
+            <h3>Your Bookings Log</h3>
+            <p>Track your confirmed sessions or cancel upcoming bookings.</p>
+        </div>
+
+        <div id="history-loading" class="slots-loading-spinner">
+            <i class="fa-solid fa-spinner fa-spin"></i> Fetching your bookings history...
+        </div>
+
+        <!-- Empty state warning -->
+        <div id="history-empty" class="dashboard-empty-state hidden">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            <p>You haven't booked any slots yet!</p>
+            <a href="{{ url_for('booking_page') }}" class="btn-book-slot-cta btn-small">Book Your First Slot</a>
+        </div>
+
+        <!-- History cards grid -->
+        <div class="history-grid" id="history-grid-container">
+            <!-- Dynamically populated via script -->
+        </div>
+    </section>
+
+    <!-- TAB CONTENT: HELP & SUPPORT (Queries) -->
+    <section class="dash-tab-panel hidden" id="panel-support">
+        <div class="support-split-layout">
+            <!-- Column 1: Raise Query Form -->
+            <div class="support-form-box glass-card">
+                <h3><i class="fa-solid fa-comment-medical text-accent"></i> Raise a Complaint / Query</h3>
+                <p class="subtext">Got pricing issues or equipment queries? Drop us a message, and our admin will reply shortly.</p>
+                
+                <form id="form-raise-query" onsubmit="submitQuery(event)">
+                    <div class="form-group">
+                        <label for="query-subject"><i class="fa-solid fa-circle-info"></i> Subject</label>
+                        <input type="text" id="query-subject" required placeholder="e.g., Refund for cancellation, Light issues...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="query-message"><i class="fa-solid fa-comment-dots"></i> Message Details</label>
+                        <textarea id="query-message" rows="5" required placeholder="Explain your query in detail..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-auth-submit">
+                        Submit Query <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Column 2: Query Logs -->
+            <div class="support-history-box glass-card">
+                <h3><i class="fa-solid fa-reply-all text-accent"></i> Your Raised Tickets</h3>
+                
+                <div id="queries-loading" class="slots-loading-spinner hidden">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading tickets...
+                </div>
+
+                <div id="queries-empty" class="dashboard-empty-state">
+                    <i class="fa-solid fa-ticket-simple"></i>
+                    <p>No active support tickets found.</p>
+                </div>
+
+                <div class="queries-list-container" id="queries-list">
+                    <!-- Dynamic complaints populated here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CANCEL BOOKING CONFIRM MODAL (SHARED) -->
+    <div class="modal-overlay hidden" id="profile-cancel-modal">
+        <div class="modal-card glass-card slide-up">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-exclamation text-error"></i> Cancel Session</h3>
+                <button class="modal-close-btn" onclick="closeCancelModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this booking? This action is immediate, and the court slot will be re-opened.</p>
+                <div class="booking-summary-list cancel-summary">
+                    <div class="summary-item">
+                        <span class="label">Date:</span>
+                        <span class="value" id="cancel-modal-date">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Time:</span>
+                        <span class="value" id="cancel-modal-time">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-modal-cancel" onclick="closeCancelModal()">Keep Booking</button>
+                <button class="btn-modal-confirm btn-danger" id="btn-profile-confirm-cancel">
+                    Cancel Booking
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay hidden" id="modal-edit-profile">
+    <div class="modal-card glass-card slide-up">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-user-gear text-accent"></i> Edit Profile Details</h3>
+            <button class="modal-close-btn" onclick="closeEditProfileModal()">&times;</button>
+        </div>
+        
+        <form id="form-edit-profile-element" onsubmit="handleProfileUpdateSubmit(event)">
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="form-group">
+                    <label for="edit-profile-name"><i class="fa-solid fa-user text-accent"></i> Full Name</label>
+                    <input type="text" id="edit-profile-name" required value="{{ user.name }}" class="booking-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-profile-mobile"><i class="fa-solid fa-phone text-accent"></i> Mobile Number</label>
+                    <input type="tel" id="edit-profile-mobile" required value="{{ user.mobile or '' }}" pattern="[0-9]{10}" title="Please enter a valid 10-digit mobile number" class="booking-input">
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeEditProfileModal()">Cancel</button>
+                <button type="submit" class="btn-modal-confirm">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const currentUser = {
+        name: "{{ user.name if user and user.name else '' }}",
+        email: "{{ user.email if user and user.email else '' }}",
+        mobile: "{{ user.mobile if user and user.mobile else '' }}"
+    };
+    
+    // Canvas agreement generation function
+    function downloadAgreementImage(details) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1200;
+        canvas.height = 850;
+        const ctx = canvas.getContext('2d');
+        
+        // Background Gradient
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, '#0a1128');
+        grad.addColorStop(0.5, '#102a43');
+        grad.addColorStop(1, '#072236');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Inner Glassmorphism Panel
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 20);
+        } else {
+            ctx.rect(40, 40, canvas.width - 80, canvas.height - 80);
+        }
+        ctx.fill();
+        
+        // Emerald Border
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(45, 45, canvas.width - 90, canvas.height - 90, 18);
+        } else {
+            ctx.rect(45, 45, canvas.width - 90, canvas.height - 90);
+        }
+        ctx.stroke();
+        
+        // Gold Border
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(55, 55, canvas.width - 110, canvas.height - 110, 15);
+        } else {
+            ctx.rect(55, 55, canvas.width - 110, canvas.height - 110);
+        }
+        ctx.stroke();
+        
+        // Shield Decoration
+        ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#10B981';
+        ctx.beginPath();
+        ctx.moveTo(600, 90);
+        ctx.lineTo(630, 120);
+        ctx.lineTo(600, 150);
+        ctx.lineTo(570, 120);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Gold Star Inside Shield
+        ctx.fillStyle = '#FBBF24';
+        ctx.beginPath();
+        ctx.moveTo(600, 105);
+        ctx.lineTo(610, 120);
+        ctx.lineTo(600, 135);
+        ctx.lineTo(590, 120);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        
+        // Header Text
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '800 32px "Outfit", sans-serif';
+        ctx.fillText('TRISTAR BADMINTON ACADEMY', 600, 205);
+        
+        ctx.fillStyle = '#10B981';
+        ctx.font = '600 16px "Outfit", sans-serif';
+        ctx.fillText('OFFICIAL MEMBERSHIP SUBSCRIPTION AGREEMENT', 600, 235);
+        
+        // Divider line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(200, 260);
+        ctx.lineTo(1000, 260);
+        ctx.stroke();
+        
+        // Description
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = 'italic 15px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('This agreement certifies that the slot reservation is locked and confirmed for the period listed below.', 600, 295);
+        
+        // Detail drawer helper
+        function drawDetailItem(x, y, label, value, valColor = '#FFFFFF') {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 13px "Outfit", sans-serif';
+            ctx.fillText(label.toUpperCase(), x, y);
+            
+            ctx.fillStyle = valColor;
+            ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(value, x, y + 25);
+        }
+        
+        // Left Column (Member Info)
+        let currentY = 360;
+        const startXLeft = 130;
+        drawDetailItem(startXLeft, currentY, 'Member Name', details.name || 'Anonymous User');
+        currentY += 65;
+        drawDetailItem(startXLeft, currentY, 'Registered Email', details.email || '—');
+        currentY += 65;
+        drawDetailItem(startXLeft, currentY, 'Mobile Number', details.mobile || '—');
+        currentY += 65;
+        drawDetailItem(startXLeft, currentY, 'Agreement ID', `TBA-MEM-${details.membership_id.toString().padStart(5, '0')}`, '#FBBF24');
+        
+        // Right Column (Subscription Info)
+        currentY = 360;
+        const startXRight = 630;
+        drawDetailItem(startXRight, currentY, 'Reserved Court Name', details.court_name);
+        currentY += 65;
+        drawDetailItem(startXRight, currentY, 'Daily Time Slot', details.time_range);
+        currentY += 65;
+        drawDetailItem(startXRight, currentY, 'Validity Period', `${details.start_date} to ${details.end_date}`, '#10B981');
+        currentY += 65;
+        drawDetailItem(startXRight, currentY, 'Duration & Amount Paid', `${details.duration} Plan  |  ₹${parseFloat(details.amount).toLocaleString('en-IN')}.00 (FULLY PAID)`, '#34D399');
+        
+        // Divider
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.beginPath();
+        ctx.moveTo(130, 640);
+        ctx.lineTo(1070, 640);
+        ctx.stroke();
+        
+        // Circular Seal
+        ctx.shadowColor = 'rgba(251, 191, 36, 0.3)';
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(220, 725, 45, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#FBBF24';
+        ctx.font = 'bold 10px "Outfit", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('TRISTAR', 220, 715);
+        ctx.font = '800 11px "Outfit", sans-serif';
+        ctx.fillText('APPROVED', 220, 730);
+        ctx.font = 'bold 9px "Outfit", sans-serif';
+        ctx.fillText('SEAL', 220, 743);
+        ctx.shadowBlur = 0;
+        
+        // Signatures
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = 'italic 16px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('Tristar Academy Executive Board', 1070, 715);
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(850, 730);
+        ctx.lineTo(1070, 730);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '600 11px "Outfit", sans-serif';
+        ctx.fillText('AUTHORIZED SIGNATURE', 1070, 750);
+        
+        // Date of Issue
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#64748B';
+        ctx.font = '600 11px "Outfit", sans-serif';
+        const issueDate = details.created_at ? new Date(details.created_at).toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'}) : new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
+        ctx.fillText(`AGREEMENT ISSUED ON: ${issueDate}`, 600, 790);
+        
+        // Download anchor trigger
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `Tristar_Membership_Agreement_${details.membership_id}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Helper to extract parameters from card attributes
+    function downloadAgreementFromCard(event, bookingId, dateRange, timeSlot, duration, amount, courtName, createdAt) {
+        if (event) event.preventDefault();
+        
+        const dates = dateRange.split(' to ');
+        const startDate = dates[0];
+        const endDate = dates[1];
+        
+        const timeRange = formatTimeTo12Hour(timeSlot);
+        const membershipId = parseInt(bookingId) >= 1000000 ? parseInt(bookingId) - 1000000 : bookingId;
+        
+        const details = {
+            name: currentUser.name,
+            email: currentUser.email,
+            mobile: currentUser.mobile,
+            court_name: courtName,
+            time_range: timeRange,
+            start_date: startDate,
+            end_date: endDate,
+            duration: duration,
+            amount: amount,
+            created_at: createdAt,
+            membership_id: membershipId
+        };
+        
+        downloadAgreementImage(details);
+    }
+
+    let activeCancelBookingId = null;
+
+    function openEditProfileModal() {
+        document.getElementById('modal-edit-profile').classList.remove('hidden');
+    }
+
+    function closeEditProfileModal() {
+        document.getElementById('modal-edit-profile').classList.add('hidden');
+    }
+
+    function handleProfileUpdateSubmit(event) {
+        event.preventDefault();
+        
+        const nameVal = document.getElementById('edit-profile-name').value.trim();
+        const mobileVal = document.getElementById('edit-profile-mobile').value.trim();
+        
+        if (!nameVal || !mobileVal) {
+            window.showToast("Name and Mobile Number cannot be blank.", 'error');
+            return;
+        }
+        
+        fetch('/api/profile/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: nameVal,
+                mobile: mobileVal
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.showToast(data.message, 'success');
+                closeEditProfileModal();
+                // Update display values dynamically
+                document.getElementById('profile-display-name').innerText = nameVal;
+                document.getElementById('profile-display-mobile').innerText = mobileVal;
+                
+                // Update value attribute so it stays fresh in modal
+                document.getElementById('edit-profile-name').setAttribute('value', nameVal);
+                document.getElementById('edit-profile-mobile').setAttribute('value', mobileVal);
+                
+                // Also update header/sidebar user name dynamically
+                const headerName = document.querySelector('.user-name-text');
+                if (headerName) {
+                    headerName.innerText = nameVal.split(' ')[0];
+                }
+            } else {
+                window.showToast(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error("Profile update error:", err);
+            window.showToast("Connection to update API failed.", 'error');
+        });
+    }
+
+    // Time Formatter for 12 hours representation
+    function formatTimeTo12Hour(timeStr) {
+        if (!timeStr) return '';
+        if (timeStr.includes(' - ')) {
+            const parts = timeStr.split(' - ');
+            return `${formatSingleTime(parts[0])} - ${formatSingleTime(parts[1])}`;
+        }
+        return formatSingleTime(timeStr);
+    }
+
+    function formatSingleTime(singleTimeStr) {
+        const [hoursStr, minutesStr] = singleTimeStr.split(':');
+        let hours = parseInt(hoursStr, 10);
+        const minutes = minutesStr;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const formattedHours = hours < 10 ? '0' + hours : hours;
+        return `${formattedHours}:${minutes} ${ampm}`;
+    }
+
+    // Switch between dashboard tabs
+    function switchDashTab(tab) {
+        const historyTabBtn = document.getElementById('tab-history-btn');
+        const supportTabBtn = document.getElementById('tab-support-btn');
+        const historyPanel = document.getElementById('panel-history');
+        const supportPanel = document.getElementById('panel-support');
+
+        if (tab === 'history') {
+            historyTabBtn.classList.add('active');
+            supportTabBtn.classList.remove('active');
+            historyPanel.classList.remove('hidden');
+            supportPanel.classList.add('hidden');
+            loadBookingHistory();
+        } else {
+            historyTabBtn.classList.remove('active');
+            supportTabBtn.classList.add('active');
+            historyPanel.classList.add('hidden');
+            supportPanel.classList.remove('hidden');
+            loadUserQueries();
+        }
+    }
+
+    // Fetch and render user's booking history
+    function loadBookingHistory() {
+        const loading = document.getElementById('history-loading');
+        const empty = document.getElementById('history-empty');
+        const grid = document.getElementById('history-grid-container');
+
+        loading.classList.remove('hidden');
+        empty.classList.add('hidden');
+        grid.innerHTML = '';
+
+        fetch('/api/bookings/history')
+            .then(res => res.json())
+            .then(data => {
+                loading.classList.add('hidden');
+                if (data.success) {
+                    if (data.history.length === 0) {
+                        empty.classList.remove('hidden');
+                        return;
+                    }
+
+                    data.history.forEach(b => {
+                        const card = document.createElement('div');
+                        card.className = `history-card glass-card border-${b.status}`;
+                        
+                        let badgeClass = 'badge-confirmed';
+                        let badgeText = b.status.toUpperCase();
+                        let actionButton = '';
+                        
+                        // Check if booking is in the future or today to allow cancellation
+                        const today = new Date();
+                        const offset = today.getTimezoneOffset();
+                        const localToday = new Date(today.getTime() - (offset * 60 * 1000));
+                        const todayStr = localToday.toISOString().split('T')[0];
+                        
+                        // Check if slot start time is in the past (active or completed)
+                        let isPastOrActive = false;
+                        if (b.type === 'membership') {
+                            const startDateStr = b.date.split(' to ')[0];
+                            isPastOrActive = startDateStr <= todayStr;
+                        } else if (b.time && b.time.includes(' - ')) {
+                            try {
+                                const timeParts = b.time.split(' - ');
+                                const startTimeStr = timeParts[0];
+                                const startDt = new Date(`${b.date}T${startTimeStr}:00+05:30`);
+                                
+                                if (new Date() >= startDt) {
+                                    isPastOrActive = true;
+                                }
+                            } catch (e) {
+                                console.error("Error parsing start time", e);
+                            }
+                        } else {
+                            isPastOrActive = b.date < todayStr;
+                        }
+
+                        let downloadButton = '';
+                        if (b.type === 'membership' && b.status === 'confirmed') {
+                            downloadButton = `
+                                <button class="btn-card-download" style="padding: 6px 12px; border-radius: var(--radius-sm); background: var(--color-accent); color: #061912; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="downloadAgreementFromCard(event, '${b.booking_id}', '${b.date}', '${b.time}', '${b.duration}', ${b.price}, '${b.court_name}', '${b.created_at}')">
+                                    <i class="fa-solid fa-file-arrow-down"></i> Agreement
+                                </button>
+                            `;
+                        }
+
+                        if (b.status === 'cancelled') {
+                            badgeClass = 'badge-cancelled';
+                        } else if (isPastOrActive) {
+                            badgeClass = 'badge-completed';
+                            badgeText = b.type === 'membership' ? 'ACTIVE / COMPLETED' : 'COMPLETED';
+                            actionButton = `
+                                <button class="btn-card-cancel disabled" disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
+                                    <i class="fa-solid fa-ban"></i> ${b.type === 'membership' ? 'Cancel Membership' : 'Cancel Booking'}
+                                </button>
+                            `;
+                        } else {
+                            actionButton = `
+                                <button class="btn-card-cancel" onclick="triggerProfileCancel(${b.booking_id}, '${b.date}', '${b.type === 'membership' ? 'Daily ' : ''}${formatTimeTo12Hour(b.time)}', '${b.type}')">
+                                    <i class="fa-solid fa-ban"></i> ${b.type === 'membership' ? 'Cancel Membership' : 'Cancel Booking'}
+                                </button>
+                            `;
+                        }
+
+                        let playersPriceLabel = `${b.members} Players | ₹${b.price}`;
+                        let timeLabel = `${b.date} | ${formatTimeTo12Hour(b.time)}`;
+                        if (b.type === 'membership') {
+                            playersPriceLabel = `${b.duration} Membership | ₹${b.price}`;
+                            timeLabel = `<span style="color: var(--color-accent); font-weight: bold;">Daily ${formatTimeTo12Hour(b.time)}</span><br><span style="font-size: 13px; color: var(--text-secondary);">Period: ${b.date}</span>`;
+                        }
+
+                        card.innerHTML = `
+                            <div class="card-header-row">
+                                <span class="history-court-name"><i class="fa-solid fa-table-tennis-paddle-ball text-accent"></i> ${b.court_name}</span>
+                                <span class="history-status-badge ${badgeClass}">${badgeText}</span>
+                            </div>
+                            <div class="card-body-row">
+                                <div class="info-block">
+                                    <span class="info-label">Date & Time</span>
+                                    <span class="info-val">${timeLabel}</span>
+                                </div>
+                                <div class="info-block">
+                                    <span class="info-label">${b.type === 'membership' ? 'Subscription / Price' : 'Players / Price'}</span>
+                                    <span class="info-val">${playersPriceLabel}</span>
+                                </div>
+                            </div>
+                            <div class="card-footer-row" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span class="created-at-text">Booked on: ${new Date(b.created_at).toLocaleDateString()}</span>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    ${downloadButton}
+                                    ${actionButton}
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                } else {
+                    window.showToast("Failed to load booking history.", 'error');
+                }
+            })
+            .catch(err => {
+                loading.classList.add('hidden');
+                console.error(err);
+                window.showToast("Connection error.", 'error');
+            });
+    }
+
+    // Modal cancellation triggers
+    function triggerProfileCancel(bookingId, date, time, type) {
+        activeCancelBookingId = bookingId;
+        document.getElementById('cancel-modal-date').innerText = date;
+        document.getElementById('cancel-modal-time').innerText = time;
+        
+        const confirmBtn = document.getElementById('btn-profile-confirm-cancel');
+        if (type === 'membership') {
+            confirmBtn.innerText = 'Confirm Cancel Membership';
+        } else {
+            confirmBtn.innerText = 'Confirm Cancel Booking';
+        }
+        
+        document.getElementById('profile-cancel-modal').classList.remove('hidden');
+    }
+
+    function closeCancelModal() {
+        document.getElementById('profile-cancel-modal').classList.add('hidden');
+        activeCancelBookingId = null;
+    }
+
+    // Confirm cancel booking call
+    document.getElementById('btn-profile-confirm-cancel').addEventListener('click', () => {
+        if (!activeCancelBookingId) return;
+
+        const isMembership = activeCancelBookingId >= 1000000;
+
+        fetch('/api/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: activeCancelBookingId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            closeCancelModal();
+            if (data.success) {
+                const msg = isMembership ? "Membership subscription cancelled successfully." : "Session cancelled successfully.";
+                window.showToast(msg, 'success');
+                loadBookingHistory();
+            } else {
+                window.showToast(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            closeCancelModal();
+            console.error(err);
+            window.showToast("Error processing cancellation.", 'error');
+        });
+    });
+
+    // Support query actions
+    function loadUserQueries() {
+        const loading = document.getElementById('queries-loading');
+        const empty = document.getElementById('queries-empty');
+        const container = document.getElementById('queries-list');
+
+        loading.classList.remove('hidden');
+        empty.classList.add('hidden');
+        container.innerHTML = '';
+
+        fetch('/api/query')
+            .then(res => res.json())
+            .then(data => {
+                loading.classList.add('hidden');
+                if (data.success) {
+                    if (data.queries.length === 0) {
+                        empty.classList.remove('hidden');
+                        return;
+                    }
+
+                    data.queries.forEach(q => {
+                        const ticket = document.createElement('div');
+                        ticket.className = `ticket-card glass-card status-${q.status}`;
+                        
+                        let replyBubble = '';
+                        if (q.reply) {
+                            replyBubble = `
+                                <div class="ticket-reply-bubble">
+                                    <div class="reply-header">
+                                        <strong><i class="fa-solid fa-user-shield text-accent"></i> Academy Admin</strong>
+                                    </div>
+                                    <p>${q.reply}</p>
+                                </div>
+                            `;
+                        } else {
+                            replyBubble = `
+                                <div class="ticket-reply-pending">
+                                    <i class="fa-solid fa-hourglass-half"></i> Awaiting administrator reply...
+                                </div>
+                            `;
+                        }
+
+                        ticket.innerHTML = `
+                            <div class="ticket-header">
+                                <span class="ticket-subject">Sub: ${q.subject}</span>
+                                <span class="ticket-status-badge badge-${q.status}">${q.status.toUpperCase()}</span>
+                            </div>
+                            <div class="ticket-message">
+                                <p class="user-msg"><strong>You:</strong> ${q.message}</p>
+                            </div>
+                            ${replyBubble}
+                            <span class="ticket-date">Raised on: ${new Date(q.created_at).toLocaleString()}</span>
+                        `;
+                        container.appendChild(ticket);
+                    });
+                }
+            })
+            .catch(err => {
+                loading.classList.add('hidden');
+                console.error(err);
+            });
+    }
+
+    function submitQuery(event) {
+        event.preventDefault();
+        
+        const payload = {
+            subject: document.getElementById('query-subject').value,
+            message: document.getElementById('query-message').value
+        };
+
+        fetch('/api/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.showToast("Query submitted successfully!", 'success');
+                document.getElementById('query-subject').value = '';
+                document.getElementById('query-message').value = '';
+                loadUserQueries();
+            } else {
+                window.showToast(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            window.showToast("Submit failed.", 'error');
+        });
+    }
+
+    // Auto-load active tab on screen load (like ?tab=support)
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab');
+        if (activeTab === 'support') {
+            switchDashTab('support');
+        } else {
+            loadBookingHistory();
+        }
+    });
+</script>
+{% endblock %}

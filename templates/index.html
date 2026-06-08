@@ -1,0 +1,860 @@
+{% extends "base.html" %}
+
+{% block title %}Tristar Badminton Academy - Premium Court Slot Booking{% endblock %}
+
+{% block content %}
+<div class="home-page-container">
+    
+    <!-- Badminton Image Carousel Section -->
+    <section class="homepage-carousel-section">
+        <div class="carousel-container">
+            <div class="carousel-slides">
+                <div class="carousel-slide active">
+                    <img src="/static/images/carousel1.png" alt="State-of-the-Art Badminton Court">
+                    <div class="carousel-caption">
+                        <h3>Premium Synthetic Courts</h3>
+                        <p>Experience international-standard court matting and professional LED lighting.</p>
+                    </div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="/static/images/carousel2.png" alt="Live Matches & Doubles Action">
+                    <div class="carousel-caption">
+                        <h3>Exciting Game Play</h3>
+                        <p>Perfect bounce and grip for singles, doubles, and friendly matches.</p>
+                    </div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="/static/images/carousel3.jpg" alt="Trophy Podium Ceremony">
+                    <div class="carousel-caption">
+                        <h3>Tristar Champions Trophy</h3>
+                        <p>Join our regular academy tournaments and compete with the best in town.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls -->
+            <button class="carousel-control prev" aria-label="Previous Slide">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="carousel-control next" aria-label="Next Slide">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            
+            <!-- Indicators -->
+            <div class="carousel-indicators">
+                <span class="indicator active" data-slide-to="0"></span>
+                <span class="indicator" data-slide-to="1"></span>
+                <span class="indicator" data-slide-to="2"></span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Hero Banner Advert Section -->
+    <section class="hero-advert-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-badge"><i class="fa-solid fa-star fa-spin text-accent"></i> Welcome to the Best Court in Town</span>
+            <h1>Tristar Badminton Academy</h1>
+            <p>Experience international-standard synthetic badminton courts designed for players who crave excellence. Book hourly, subscribe monthly, or enroll in professional student coaching programs.<br> To book Hourly slot, please click the button below.</p>
+            
+            <!-- Pulse Booking CTA -->
+            <div class="booking-cta-container">
+                <a href="{{ url_for('booking_page') }}" class="btn-book-slot-cta pulse">
+                    <i class="fa-solid fa-ticket"></i> Book Hourly Slots
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Book Your Membership Section -->
+    <section id="membership-booking" class="membership-section">
+        <div class="section-title-wrapper">
+            <span class="section-subtitle">Exclusive Long-Term Access</span>
+            <h2>Book Your Membership</h2>
+            <div class="title-bar"></div>
+            <p class="section-description">Lock down your preferred standart time slot daily for the entire subscription period and play consistently.</p>
+        </div>
+
+        <div class="membership-grid">
+            <!-- 1 Month Card -->
+            <div class="membership-card glass-card">
+                <div class="membership-badge">Starter</div>
+                <div class="membership-icon">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <h3>1 Month</h3>
+                <p class="membership-desc">Lock your favorite daily slot for a full month. Ideal for testing your schedule.</p>
+                <div class="membership-features">
+                    <span><i class="fa-solid fa-check text-accent"></i>Standard time slot</span>
+                </div>
+            </div>
+
+            <!-- 3 Months Card -->
+            <div class="membership-card glass-card">
+                <div class="membership-badge">Quarterly</div>
+                <div class="membership-icon">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <h3>3 Months</h3>
+                <p class="membership-desc">Quarterly consistency. Perfect for building stamina and matching schedules.</p>
+                <div class="membership-features">
+                    <span><i class="fa-solid fa-check text-accent"></i>Standard time slot</span>
+                </div>
+            </div>
+
+            <!-- 6 Months Card -->
+            <div class="membership-card glass-card premium-membership">
+                <div class="membership-badge special">Best Value</div>
+                <div class="membership-icon accent-icon">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <h3>6 Months</h3>
+                <p class="membership-desc">Half-year premium access. Complete commitment to training and gameplay.</p>
+                <div class="membership-features">
+                    <span><i class="fa-solid fa-check text-accent"></i> Standard time slot</span>
+                    <span><i class="fa-solid fa-check text-accent"></i> Advanced booking privilege</span>
+                </div>
+            </div>
+
+            <!-- 1 Year Card -->
+            <div class="membership-card glass-card">
+                <div class="membership-badge">Annual</div>
+                <div class="membership-icon">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h3>1 Year</h3>
+                <p class="membership-desc">The ultimate athlete package. The court is reserved for you year-round.</p>
+                <div class="membership-features">
+                    <span><i class="fa-solid fa-check text-accent"></i> Standard time slot</span>
+                    <span><i class="fa-solid fa-check text-accent"></i> Free academy league entry</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Highlighted Contact/Owner Box for Booking -->
+        <div class="membership-booking-highlight glass-card pulse-glow-border">
+            <div class="highlight-info-grid">
+                <div class="highlight-text-content">
+                    <span class="booking-status"><i class="fa-solid fa-circle-info fa-bounce text-accent"></i> EXCLUSIVE BOOKINGS</span>
+                    <h3>Book Your Subscription Membership</h3>
+                    <p>Reserve your preferred daily time slot for the entire subscription period instantly. You can choose a 1-month, 3-month, 6-month, or 1-year block booking online. You can also contact our manager Stephen directly for corporate queries.</p>
+                    
+                    <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px;">
+                        {% if user %}
+                            <button class="btn-book-slot-cta pulse" style="border: none; width: 100%; display: flex; justify-content: center;" onclick="openMembershipModal()">
+                                <i class="fa-solid fa-crown"></i> Book Membership Online Now
+                            </button>
+                        {% else %}
+                            <a href="{{ url_for('login_page', next='/?open_membership=true') }}" class="btn-book-slot-cta pulse" style="width: 100%; display: flex; justify-content: center; text-decoration: none;">
+                                <i class="fa-solid fa-right-to-bracket"></i> Login to Book Membership
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="highlight-contact-details" style="display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+                    <div class="contact-card">
+                        <div class="contact-icon"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="contact-info">
+                            <span class="contact-label">Academy Manager</span>
+                            <span class="contact-value highlight-value">M. PAULARUN</span>
+                        </div>
+                    </div>
+                    <div class="contact-card">
+                        <div class="contact-icon"><i class="fa-solid fa-phone-volume text-accent"></i></div>
+                        <div class="contact-info">
+                            <span class="contact-label">Call to Enquire</span>
+                            <a href="tel:+919994093575" class="contact-value highlight-value phone-link">+91 9994093575</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marketing / Advert Core Features Grid -->
+    <section class="academy-offers-section">
+        <div class="section-title-wrapper">
+            <span class="section-subtitle">Exquisite Court Features & Offers</span>
+            <h2>Why Choose Tristar Academy?</h2>
+            <div class="title-bar"></div>
+        </div>
+
+        <div class="offers-grid">
+            <!-- Card 1: Hourly slots -->
+            <div class="offer-card glass-card">
+                <div class="offer-icon">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <h3>Hourly Slots Available</h3>
+                <p>Play at your own convenience! Flexible hourly bookings available starting from 5 AM till 11 PM. Clean mats, non-marking shoe compliance, and premium shuttlecock support.</p>
+                <div class="card-accent-tag">Starting ₹50/hr</div>
+            </div>
+
+            <!-- Card 2: Monthly membership -->
+            <div class="offer-card glass-card">
+                <div class="offer-icon">
+                    <i class="fa-solid fa-id-card"></i>
+                </div>
+                <h3>Monthly Membership</h3>
+                <p>Become a Tristar Elite Member. Get unlimited access to dedicated prime slots, free guest passes, court reservations, and access to all academy events & leagues.</p>
+                <div class="card-accent-tag">From ₹750/mo</div>
+            </div>
+
+            <!-- Card 3: Student coaching -->
+            <div class="offer-card glass-card">
+                <div class="offer-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h3>Student Coaching</h3>
+                <p>Nurture the champion in you! Comprehensive batches for junior and senior levels. Guided training under state and national level certified badminton coaches.</p>
+                <div class="card-accent-tag">Special Batches</div>
+            </div>
+
+            <!-- Card 4: Weekend Special Offer -->
+            <div class="offer-card glass-card promo-card">
+                <div class="offer-icon accent-icon">
+                    <i class="fa-solid fa-gifts"></i>
+                </div>
+                <h3>Weekend Special Offer</h3>
+                <p>Planning a weekend mashup? Flat ₹300 for 1hr slots on Saturdays and Sundays no restriction on number of members. Perfect for club matches!</p>
+                <div class="card-accent-tag special">₹300 Weekend Offer</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Court Showcase Gallery -->
+    <section class="court-showcase-section">
+        <div class="section-title-wrapper">
+            <span class="section-subtitle">Stunning Visual Showcase</span>
+            <h2>Our Premium Court Arena</h2>
+            <div class="title-bar"></div>
+        </div>
+        
+        <div class="court-gallery-container">
+            <div class="court-gallery-card glass-card">
+                <div class="court-image-wrapper">
+                    <!-- High-quality image will show here or placeholder graphic -->
+                    <img src="/static/images/court1.jpg" alt="Tristar Court Arena" class="court-image" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22 viewBox=%220 0 800 500%22><rect width=%22800%22 height=%22500%22 fill=%22%230E1424%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2310B981%22 font-family=%22sans-serif%22 font-size=%2224%22>Tristar Professional Badminton Court</text></svg>'">
+                    <div class="court-overlay-title">Court 1: The Championship Arena</div>
+                </div>
+                <div class="court-details-body">
+                    <div class="court-tags">
+                        <span class="court-tag"><i class="fa-solid fa-shield-halved"></i> Synthetic Turf</span>
+                        <span class="court-tag"><i class="fa-solid fa-lightbulb"></i> LED Floodlights</span>
+                        <span class="court-tag"><i class="fa-solid fa-shoe-prints"></i> Non-Marking complies</span>
+                    </div>
+                    <p>Designed for professional speed and bounce. Experience minimal joint impact with our 6mm multi-layer synthetic court padding.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Info Cards -->
+    <section class="info-highlights-section">
+        <div class="info-highlight-item glass-card">
+            <i class="fa-solid fa-lock-open text-accent"></i>
+            <div class="info-text">
+                <h4>Flexible Cancellations</h4>
+                <p>Change of plans? Cancel up to 2 hours before your slot for a 100% refund into your academy wallet.</p>
+            </div>
+        </div>
+        <div class="info-highlight-item glass-card">
+            <i class="fa-solid fa-credit-card text-accent"></i>
+            <div class="info-text">
+                <h4>Safe & Instant Bookings</h4>
+                <p>Reserve slots instantly and securely. Live synchronization guarantees zero overbooking or system lockups.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- BOOK MEMBERSHIP MODAL -->
+    <div class="modal-overlay hidden" id="modal-book-membership">
+        <div class="modal-card glass-card slide-up">
+            <div class="modal-header" style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;"><i class="fa-solid fa-crown text-accent"></i> Book Membership Subscription</h3>
+                <button class="modal-close-btn" style="font-size: 24px; color: var(--text-secondary);" onclick="closeMembershipModal()">&times;</button>
+            </div>
+            
+            <form id="form-book-membership" onsubmit="submitMembershipBooking(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px; padding: 20px;">
+                    <!-- Court Selector -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="membership-court-select" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-table-tennis-paddle-ball text-accent"></i> Select Court</label>
+                        <select id="membership-court-select" class="booking-input" required style="width: 100%; margin-top: 5px;" onchange="loadMembershipSlots()">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Duration Selector -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="membership-duration" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-hourglass-half text-accent"></i> Duration</label>
+                        <select id="membership-duration" class="booking-input" required style="width: 100%; margin-top: 5px;" onchange="loadMembershipSlots()">
+                            <option value="1 Month">1 Month</option>
+                            <option value="3 Months">3 Months</option>
+                            <option value="6 Months">6 Months</option>
+                            <option value="1 Year">1 Year</option>
+                        </select>
+                    </div>
+
+                    <!-- Start Date -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="membership-start-date" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-calendar-day text-accent"></i> Start Date</label>
+                        <input type="date" id="membership-start-date" class="booking-input" required style="width: 100%; margin-top: 5px;" onchange="loadMembershipSlots()">
+                    </div>
+
+                    <!-- Slot Selector -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="membership-slot-select" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);"><i class="fa-regular fa-clock text-accent"></i> Select Time Slot</label>
+                        <select id="membership-slot-select" class="booking-input" required style="width: 100%; margin-top: 5px;" onchange="updateMembershipAmount()">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="membership-amount" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-indian-rupee-sign text-accent"></i> Membership Amount</label>
+                        <input type="text" id="membership-amount" class="booking-input" readonly required style="width: 100%; margin-top: 5px; background: rgba(255,255,255,0.05); font-weight: bold; color: var(--color-accent);">
+                    </div>
+
+                    <div class="cancellation-policy-hint" style="font-size: 11px; color: var(--text-muted); display: flex; gap: 8px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px dashed var(--border-color);">
+                        <i class="fa-solid fa-circle-info" style="margin-top: 2px; color: var(--color-accent);"></i>
+                        <span>Re-locks the daily slot for the chosen period. Overlapping dates will be validated before booking.</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-modal-cancel" style="padding: 10px 20px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-secondary);" onclick="closeMembershipModal()">Cancel</button>
+                    <button type="submit" class="btn-modal-confirm" id="btn-submit-membership-action" style="padding: 10px 20px; border-radius: var(--radius-sm); background: var(--color-accent); color: #061912; font-weight: 700; border: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <i class="fa-solid fa-credit-card"></i> Pay & Book Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const currentUser = {
+        name: "{{ user.name if user and user.name else '' }}",
+        email: "{{ user.email if user and user.email else '' }}",
+        mobile: "{{ user.mobile if user and user.mobile else '' }}"
+    };
+    
+    // Canvas agreement generation function
+    function downloadAgreementImage(details) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1200;
+        canvas.height = 850;
+        const ctx = canvas.getContext('2d');
+        
+        // Background Gradient
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, '#0a1128');
+        grad.addColorStop(0.5, '#102a43');
+        grad.addColorStop(1, '#072236');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Inner Glassmorphism Panel
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 20);
+        } else {
+            ctx.rect(40, 40, canvas.width - 80, canvas.height - 80);
+        }
+        ctx.fill();
+        
+        // Emerald Border
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(45, 45, canvas.width - 90, canvas.height - 90, 18);
+        } else {
+            ctx.rect(45, 45, canvas.width - 90, canvas.height - 90);
+        }
+        ctx.stroke();
+        
+        // Gold Border
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(55, 55, canvas.width - 110, canvas.height - 110, 15);
+        } else {
+            ctx.rect(55, 55, canvas.width - 110, canvas.height - 110);
+        }
+        ctx.stroke();
+        
+        // Shield Decoration
+        ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#10B981';
+        ctx.beginPath();
+        ctx.moveTo(600, 90);
+        ctx.lineTo(630, 120);
+        ctx.lineTo(600, 150);
+        ctx.lineTo(570, 120);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Gold Star Inside Shield
+        ctx.fillStyle = '#FBBF24';
+        ctx.beginPath();
+        ctx.moveTo(600, 105);
+        ctx.lineTo(610, 120);
+        ctx.lineTo(600, 135);
+        ctx.lineTo(590, 120);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        
+        // Header Text
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '800 32px "Outfit", sans-serif';
+        ctx.fillText('TRISTAR BADMINTON ACADEMY', 600, 205);
+        
+        ctx.fillStyle = '#10B981';
+        ctx.font = '600 16px "Outfit", sans-serif';
+        ctx.fillText('OFFICIAL MEMBERSHIP SUBSCRIPTION AGREEMENT', 600, 235);
+        
+        // Divider line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(200, 260);
+        ctx.lineTo(1000, 260);
+        ctx.stroke();
+        
+        // Description
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = 'italic 15px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('This agreement certifies that the slot reservation is locked and confirmed for the period listed below.', 600, 295);
+        
+        // Detail drawer helper
+        function drawDetailItem(x, y, label, value, valColor = '#FFFFFF') {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 13px "Outfit", sans-serif';
+            ctx.fillText(label.toUpperCase(), x, y);
+            
+            ctx.fillStyle = valColor;
+            ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(value, x, y + 25);
+        }
+        
+        // Left Column (Member Info)
+        let currentY = 360;
+        const startXLeft = 130;
+        drawDetailItem(startXLeft, currentY, 'Member Name', details.name || 'Anonymous User');
+        currentY += 65;
+        drawDetailItem(startXLeft, currentY, 'Registered Email', details.email || '—');
+        currentY += 65;
+        drawDetailItem(startXLeft, currentY, 'Mobile Number', details.mobile || '—');
+        currentY += 65;
+        drawDetailItem(startXLeft, currentY, 'Agreement ID', `TBA-MEM-${details.membership_id.toString().padStart(5, '0')}`, '#FBBF24');
+        
+        // Right Column (Subscription Info)
+        currentY = 360;
+        const startXRight = 630;
+        drawDetailItem(startXRight, currentY, 'Reserved Court Name', details.court_name);
+        currentY += 65;
+        drawDetailItem(startXRight, currentY, 'Daily Time Slot', details.time_range);
+        currentY += 65;
+        drawDetailItem(startXRight, currentY, 'Validity Period', `${details.start_date} to ${details.end_date}`, '#10B981');
+        currentY += 65;
+        drawDetailItem(startXRight, currentY, 'Duration & Amount Paid', `${details.duration} Plan  |  ₹${parseFloat(details.amount).toLocaleString('en-IN')}.00 (FULLY PAID)`, '#34D399');
+        
+        // Divider
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.beginPath();
+        ctx.moveTo(130, 640);
+        ctx.lineTo(1070, 640);
+        ctx.stroke();
+        
+        // Circular Seal
+        ctx.shadowColor = 'rgba(251, 191, 36, 0.3)';
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(220, 725, 45, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#FBBF24';
+        ctx.font = 'bold 10px "Outfit", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('TRISTAR', 220, 715);
+        ctx.font = '800 11px "Outfit", sans-serif';
+        ctx.fillText('APPROVED', 220, 730);
+        ctx.font = 'bold 9px "Outfit", sans-serif';
+        ctx.fillText('SEAL', 220, 743);
+        ctx.shadowBlur = 0;
+        
+        // Signatures
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = 'italic 16px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('Tristar Academy Executive Board', 1070, 715);
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(850, 730);
+        ctx.lineTo(1070, 730);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '600 11px "Outfit", sans-serif';
+        ctx.fillText('AUTHORIZED SIGNATURE', 1070, 750);
+        
+        // Date of Issue
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#64748B';
+        ctx.font = '600 11px "Outfit", sans-serif';
+        const issueDate = details.created_at ? new Date(details.created_at).toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'}) : new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
+        ctx.fillText(`AGREEMENT ISSUED ON: ${issueDate}`, 600, 790);
+        
+        // Download anchor trigger
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `Tristar_Membership_Agreement_${details.membership_id}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check for redirect action from membership login
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('open_membership') === 'true') {
+            openMembershipModal();
+            // Clear parameter from address bar
+            const newUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
+        const slides = document.querySelectorAll('.carousel-slide');
+        const indicators = document.querySelectorAll('.carousel-indicators .indicator');
+        const prevBtn = document.querySelector('.carousel-control.prev');
+        const nextBtn = document.querySelector('.carousel-control.next');
+        let currentSlide = 0;
+        let slideInterval;
+
+        function showSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].classList.remove('active');
+            currentSlide = (index + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].classList.add('active');
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        function startAutoSlide() {
+            stopAutoSlide();
+            slideInterval = setInterval(nextSlide, 4500);
+        }
+
+        function stopAutoSlide() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+            }
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                nextSlide();
+                startAutoSlide();
+            });
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                prevSlide();
+                startAutoSlide();
+            });
+        }
+
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', function() {
+                showSlide(index);
+                startAutoSlide();
+            });
+        });
+
+        // Initialize auto-sliding
+        startAutoSlide();
+    });
+
+    let membershipCourtsFetched = false;
+
+    function openMembershipModal() {
+        const modal = document.getElementById('modal-book-membership');
+        modal.classList.remove('hidden');
+        
+        // Set start date default to today (timezone aware)
+        const dateInput = document.getElementById('membership-start-date');
+        const today = new Date();
+        const offset = today.getTimezoneOffset();
+        const localToday = new Date(today.getTime() - (offset * 60 * 1000));
+        const dateStr = localToday.toISOString().split('T')[0];
+        dateInput.value = dateStr;
+        dateInput.min = dateStr;
+
+        if (!membershipCourtsFetched) {
+            fetchMembershipCourts();
+        }
+        updateMembershipAmount();
+    }
+
+    function closeMembershipModal() {
+        document.getElementById('modal-book-membership').classList.add('hidden');
+    }
+
+    function fetchMembershipCourts() {
+        const select = document.getElementById('membership-court-select');
+        select.innerHTML = '<option value="">Loading courts...</option>';
+        
+        fetch('/api/courts')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.courts.length > 0) {
+                    select.innerHTML = '';
+                    data.courts.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.innerText = c.name;
+                        select.appendChild(opt);
+                    });
+                    membershipCourtsFetched = true;
+                    loadMembershipSlots();
+                } else {
+                    select.innerHTML = '<option value="">No courts available</option>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                select.innerHTML = '<option value="">Failed to load courts</option>';
+            });
+    }
+
+    function loadMembershipSlots() {
+        const courtId = document.getElementById('membership-court-select').value;
+        const startDateInput = document.getElementById('membership-start-date');
+        const durationInput = document.getElementById('membership-duration');
+        const select = document.getElementById('membership-slot-select');
+        if (!courtId) return;
+
+        let dateVal = startDateInput.value;
+        if (!dateVal) {
+            const today = new Date();
+            const offset = today.getTimezoneOffset();
+            const localToday = new Date(today.getTime() - (offset * 60 * 1000));
+            dateVal = localToday.toISOString().split('T')[0];
+            startDateInput.value = dateVal;
+        }
+        
+        const durationVal = durationInput.value || '1 Month';
+
+        select.innerHTML = '<option value="">Loading slots...</option>';
+
+        fetch(`/api/membership-eligible-slots?court_id=${courtId}&start_date=${dateVal}&duration=${durationVal}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.slots.length > 0) {
+                    select.innerHTML = '';
+                    
+                    const allowedMorning = ["04:00", "05:00", "06:00", "07:00", "08:00"];
+                    let count = 0;
+                    
+                    data.slots.forEach(s => {
+                        const start = s.start_time;
+                        const isMorning = allowedMorning.includes(start);
+                        const opt = document.createElement('option');
+                        opt.value = s.slot_id;
+                        opt.setAttribute('data-start-time', start);
+                        
+                        const timeText = formatTimeTo12Hour(`${s.start_time} - ${s.end_time}`);
+                        const rate = isMorning ? 1200 : 750;
+                        
+                        if (s.status === 'available') {
+                            opt.innerText = `${timeText} (₹${rate}/mo)`;
+                        } else {
+                            opt.disabled = true;
+                            let shortReason = 'Booked';
+                            if (s.reason && s.reason.includes('Reserved by membership')) {
+                                shortReason = 'Reserved';
+                            } else if ((s.reason && s.reason.includes('Blocked')) || s.status === 'blocked') {
+                                shortReason = 'Blocked';
+                            }
+                            opt.innerText = `${timeText} (${shortReason})`;
+                        }
+                        select.appendChild(opt);
+                        count++;
+                    });
+                    
+                    if (count === 0) {
+                        select.innerHTML = '<option value="">No eligible membership slots</option>';
+                    } else {
+                        updateMembershipAmount();
+                    }
+                } else {
+                    select.innerHTML = '<option value="">No slots configured</option>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                select.innerHTML = '<option value="">Failed to load slots</option>';
+            });
+    }
+
+    // Time Formatter for 12 hours representation
+    function formatTimeTo12Hour(timeStr) {
+        if (!timeStr) return '';
+        if (timeStr.includes(' - ')) {
+            const parts = timeStr.split(' - ');
+            return `${formatSingleTime(parts[0])} - ${formatSingleTime(parts[1])}`;
+        }
+        return formatSingleTime(timeStr);
+    }
+
+    function formatSingleTime(singleTimeStr) {
+        const [hoursStr, minutesStr] = singleTimeStr.split(':');
+        let hours = parseInt(hoursStr, 10);
+        const minutes = minutesStr;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const formattedHours = hours < 10 ? '0' + hours : hours;
+        return `${formattedHours}:${minutes} ${ampm}`;
+    }
+
+    function updateMembershipAmount() {
+        const slotSelect = document.getElementById('membership-slot-select');
+        const duration = document.getElementById('membership-duration').value;
+        const amountInput = document.getElementById('membership-amount');
+        
+        if (!slotSelect || !amountInput) return;
+        
+        const selectedOpt = slotSelect.options[slotSelect.selectedIndex];
+        if (!selectedOpt || !selectedOpt.value) {
+            amountInput.value = 'Select a time slot first';
+            return;
+        }
+        
+        const startTime = selectedOpt.getAttribute('data-start-time');
+        
+        // Determine monthly rate
+        let monthlyRate = 750.00;
+        const morningTimes = ["04:00", "05:00", "06:00", "07:00", "08:00"];
+        if (morningTimes.includes(startTime)) {
+            monthlyRate = 1200.00;
+        } else {
+            monthlyRate = 750.00;
+        }
+        
+        // Determine multiplier
+        let months = 1;
+        if (duration === '3 Months') {
+            months = 3;
+        } else if (duration === '6 Months') {
+            months = 6;
+        } else if (duration === '1 Year') {
+            months = 12;
+        }
+        
+        const total = monthlyRate * months;
+        amountInput.value = `₹${total.toLocaleString('en-IN')}`;
+    }
+
+    function submitMembershipBooking(event) {
+        event.preventDefault();
+        
+        const courtId = parseInt(document.getElementById('membership-court-select').value);
+        const slotId = parseInt(document.getElementById('membership-slot-select').value);
+        const startDate = document.getElementById('membership-start-date').value;
+        const duration = document.getElementById('membership-duration').value;
+        
+        const amountText = document.getElementById('membership-amount').value;
+        const amount = parseFloat(amountText.replace(/[^\d.]/g, ''));
+
+        const submitBtn = document.getElementById('btn-submit-membership-action');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+        fetch('/api/book-membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                court_id: courtId,
+                slot_id: slotId,
+                start_date: startDate,
+                duration: duration,
+                amount: amount
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pay & Book Now';
+            
+            if (data.success) {
+                closeMembershipModal();
+                sessionStorage.setItem('booking_success_msg', 'Membership subscription booked successfully!');
+                
+                try {
+                    const courtSelect = document.getElementById('membership-court-select');
+                    const courtName = courtSelect.options[courtSelect.selectedIndex].text;
+                    const slotSelect = document.getElementById('membership-slot-select');
+                    const slotText = slotSelect.options[slotSelect.selectedIndex].text;
+                    const timeRange = slotText.split(' (')[0];
+                    
+                    const details = {
+                        name: currentUser.name,
+                        email: currentUser.email,
+                        mobile: currentUser.mobile,
+                        court_name: courtName,
+                        time_range: timeRange,
+                        start_date: data.membership.start_date,
+                        end_date: data.membership.end_date,
+                        duration: data.membership.duration,
+                        amount: data.membership.amount,
+                        created_at: new Date().toISOString(),
+                        membership_id: data.membership.id
+                    };
+                    downloadAgreementImage(details);
+                } catch (err) {
+                    console.error("Error drawing or downloading agreement image:", err);
+                }
+
+                const amount = (data.membership && data.membership.amount) ? data.membership.amount : 0;
+                const paymentUrl = `https://upi.pe/bharatpe.0102864147@indus/${Math.round(amount)}.00`;
+                setTimeout(() => {
+                    window.location.href = paymentUrl;
+                }, 500);
+            } else {
+                window.showToast(data.message || "Failed to book membership.", 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pay & Book Now';
+            window.showToast("Booking request timed out.", 'error');
+        });
+    }
+</script>
+{% endblock %}

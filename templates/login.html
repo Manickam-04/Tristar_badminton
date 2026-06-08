@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Tristar Badminton Academy - Login & Registration{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card glass-card">
+        
+        <!-- Toggle Tabs -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">
+                <i class="fa-solid fa-lock"></i> Sign In
+            </button>
+            <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">
+                <i class="fa-solid fa-user-plus"></i> Register
+            </button>
+        </div>
+
+        <!-- Login Form Panel -->
+        <div class="auth-panel" id="panel-login">
+            <div class="panel-header">
+                <h2>Welcome Back!</h2>
+                <p>Sign in to book courts, view history, and check slot availability.</p>
+            </div>
+            
+            <form id="form-login-element" onsubmit="handleAuthSubmit(event, 'login')">
+                <div class="form-group">
+                    <label for="login-email"><i class="fa-solid fa-envelope"></i> Email or Mobile Number</label>
+                    <input type="text" id="login-email" required placeholder="name@example.com or 9876543210" autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password"><i class="fa-solid fa-key"></i> Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password">
+                </div>
+
+                <div class="form-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div class="remember-me">
+                        <input type="checkbox" id="login-remember">
+                        <label for="login-remember">Remember me</label>
+                    </div>
+                    <div class="forgot-pwd-link">
+                        <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="color: var(--color-accent); font-size: 13px; font-weight: 600;">Forgot Password?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-auth-submit">
+                    <span>Sign In</span> <i class="fa-solid fa-circle-arrow-right"></i>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="javascript:void(0)" onclick="switchAuthTab('register')" style="color: var(--color-accent); font-weight: 600; font-size: 13px; text-decoration: none;">New user? Please register</a>
+            </div>
+
+
+        </div>
+
+        <!-- Registration Form Panel -->
+        <div class="auth-panel hidden" id="panel-register">
+            <div class="panel-header">
+                <h2>Create Account</h2>
+                <p>Sign up to lock slots, track history, and raise service queries.</p>
+            </div>
+            
+            <form id="form-register-element" onsubmit="handleAuthSubmit(event, 'register')">
+                <div class="form-group">
+                    <label for="register-name"><i class="fa-solid fa-user"></i> Full Name</label>
+                    <input type="text" id="register-name" required placeholder="John Doe" autocomplete="name">
+                </div>
+
+                <div class="form-group">
+                    <label for="register-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="register-email" required placeholder="name@example.com" autocomplete="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-mobile"><i class="fa-solid fa-phone"></i> Mobile Number</label>
+                    <input type="tel" id="register-mobile" required placeholder="9876543210" pattern="[0-9]{10}" title="Please enter a valid 10-digit mobile number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-password"><i class="fa-solid fa-key"></i> Password</label>
+                    <input type="password" id="register-password" required placeholder="Minimum 6 characters" autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="btn-auth-submit">
+                    <span>Create Account</span> <i class="fa-solid fa-user-plus"></i>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="javascript:void(0)" onclick="switchAuthTab('login')" style="color: var(--color-accent); font-weight: 600; font-size: 13px; text-decoration: none;">Already have an account? Sign In</a>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="modal-overlay hidden" id="modal-forgot-password">
+    <div class="modal-card glass-card slide-up">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-key text-accent"></i> Reset Password</h3>
+            <button class="modal-close-btn" onclick="closeForgotPasswordModal()">&times;</button>
+        </div>
+        
+        <form id="form-forgot-password-element" onsubmit="handleForgotPasswordSubmit(event)">
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+                <p style="font-size: 13px; color: var(--text-secondary);">Enter your email or mobile number below, then set a new password for your account.</p>
+                
+                <div class="form-group">
+                    <label for="forgot-identity"><i class="fa-solid fa-user-tag text-accent"></i> Email or Mobile Number</label>
+                    <input type="text" id="forgot-identity" required placeholder="name@example.com or 9876543210" class="booking-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="forgot-new-password"><i class="fa-solid fa-lock text-accent"></i> New Password</label>
+                    <input type="password" id="forgot-new-password" required placeholder="Minimum 6 characters" class="booking-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="forgot-confirm-password"><i class="fa-solid fa-circle-check text-accent"></i> Confirm New Password</label>
+                    <input type="password" id="forgot-confirm-password" required placeholder="••••••••" class="booking-input">
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeForgotPasswordModal()">Cancel</button>
+                <button type="submit" class="btn-modal-confirm">
+                    <i class="fa-solid fa-key"></i> Reset Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const rememberedIdentity = localStorage.getItem('remembered_identity');
+        if (rememberedIdentity) {
+            const emailInput = document.getElementById('login-email');
+            const rememberCheckbox = document.getElementById('login-remember');
+            if (emailInput) {
+                emailInput.value = rememberedIdentity;
+            }
+            if (rememberCheckbox) {
+                rememberCheckbox.checked = true;
+            }
+        }
+    });
+
+    function switchAuthTab(tab) {
+        const loginTab = document.getElementById('tab-login');
+        const regTab = document.getElementById('tab-register');
+        const loginPanel = document.getElementById('panel-login');
+        const regPanel = document.getElementById('panel-register');
+
+        if (tab === 'login') {
+            loginTab.classList.add('active');
+            regTab.classList.remove('active');
+            loginPanel.classList.remove('hidden');
+            regPanel.classList.add('hidden');
+        } else {
+            loginTab.classList.remove('active');
+            regTab.classList.add('active');
+            loginPanel.classList.add('hidden');
+            regPanel.classList.remove('hidden');
+        }
+    }
+
+    function handleAuthSubmit(event, action) {
+        event.preventDefault();
+        
+        let payload = {};
+        let url = '';
+        let remember = false;
+
+        if (action === 'login') {
+            remember = document.getElementById('login-remember').checked;
+            payload = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value,
+                role: 'user',
+                remember: remember
+            };
+            url = '/api/login';
+        } else {
+            payload = {
+                name: document.getElementById('register-name').value,
+                email: document.getElementById('register-email').value,
+                mobile: document.getElementById('register-mobile').value,
+                password: document.getElementById('register-password').value
+            };
+            url = '/api/register';
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (action === 'login') {
+                    if (remember) {
+                        localStorage.setItem('remembered_identity', payload.email);
+                    } else {
+                        localStorage.removeItem('remembered_identity');
+                    }
+                }
+                window.showToast(data.message, 'success');
+                setTimeout(() => {
+                    if (data.role === 'admin') {
+                        window.location.href = '/admin';
+                    } else {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const nextUrl = urlParams.get('next') || '/';
+                        window.location.href = nextUrl;
+                    }
+                }, 1000);
+            } else {
+                window.showToast(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error("Auth error:", err);
+            window.showToast("Server connection failed.", 'error');
+        });
+    }
+
+    function openForgotPasswordModal() {
+        document.getElementById('modal-forgot-password').classList.remove('hidden');
+    }
+
+    function closeForgotPasswordModal() {
+        document.getElementById('modal-forgot-password').classList.add('hidden');
+        document.getElementById('form-forgot-password-element').reset();
+    }
+
+    function handleForgotPasswordSubmit(event) {
+        event.preventDefault();
+        
+        const identity = document.getElementById('forgot-identity').value.trim();
+        const newPassword = document.getElementById('forgot-new-password').value;
+        const confirmPassword = document.getElementById('forgot-confirm-password').value;
+        
+        if (newPassword !== confirmPassword) {
+            window.showToast("Passwords do not match.", 'error');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            window.showToast("Password must be at least 6 characters.", 'error');
+            return;
+        }
+        
+        fetch('/api/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                identity: identity,
+                new_password: newPassword
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.showToast(data.message, 'success');
+                closeForgotPasswordModal();
+            } else {
+                window.showToast(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error("Forgot pwd error:", err);
+            window.showToast("Server connection failed.", 'error');
+        });
+    }
+
+
+</script>
+{% endblock %}

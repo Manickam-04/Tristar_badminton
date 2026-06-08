@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Tristar Academy - Admin Control Panel{% endblock %}
+
+{% block content %}
+<div class="admin-page-container">
+    
+    <!-- Admin Hero Header -->
+    <div class="admin-hero-card glass-card">
+        <div class="admin-avatar">
+            <i class="fa-solid fa-users-gear text-accent"></i>
+        </div>
+        <div class="admin-hero-text">
+            <h2>Academy Control Center</h2>
+            <p>Welcome back, Admin. Configure prices, block courts for tournaments, answer customer complaints, and review academy reports.</p>
+        </div>
+    </div>
+
+    <!-- Admin Operations Tab Navigation -->
+    <div class="admin-tabs-nav glass-card">
+        <button class="admin-tab-btn active" id="tab-bookings-btn" onclick="switchAdminTab('bookings')">
+            <i class="fa-solid fa-clipboard-list"></i> Booking Logs
+        </button>
+        <button class="admin-tab-btn" id="tab-memberships-btn" onclick="switchAdminTab('memberships')">
+            <i class="fa-solid fa-crown"></i> Memberships
+        </button>
+        <button class="admin-tab-btn" id="tab-slots-btn" onclick="switchAdminTab('slots')">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Manage Slots
+        </button>
+        <button class="admin-tab-btn" id="tab-queries-btn" onclick="switchAdminTab('queries')">
+            <i class="fa-solid fa-comments"></i> User Query <span id="queries-badge-count" class="badge-role text-accent hidden">0</span>
+        </button>
+        <button class="admin-tab-btn" id="tab-metrics-btn" onclick="switchAdminTab('metrics')">
+            <i class="fa-solid fa-chart-line"></i> Statistics & Report
+        </button>
+    </div>
+
+    <!-- PANEL 1: STATISTICS & REPORTS -->
+    <section class="admin-panel hidden" id="admin-panel-metrics">
+        <!-- Summary Cards Grid -->
+        <div class="metrics-summary-grid">
+            <div class="metric-box glass-card">
+                <div class="metric-icon"><i class="fa-solid fa-wallet text-accent"></i></div>
+                <div class="metric-text">
+                    <span class="label">Total Revenue</span>
+                    <h3 id="stat-revenue">₹0.00</h3>
+                </div>
+            </div>
+            <div class="metric-box glass-card">
+                <div class="metric-icon"><i class="fa-solid fa-circle-check text-accent"></i></div>
+                <div class="metric-text">
+                    <span class="label">Confirmed Bookings</span>
+                    <h3 id="stat-bookings">0</h3>
+                </div>
+            </div>
+            <div class="metric-box glass-card">
+                <div class="metric-icon"><i class="fa-solid fa-circle-xmark text-error"></i></div>
+                <div class="metric-text">
+                    <span class="label">Cancellations</span>
+                    <h3 id="stat-cancellations">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly & Weekly Tables -->
+        <div class="reports-split-container">
+            <div class="report-table-box glass-card">
+                <h3><i class="fa-solid fa-calendar-days text-accent"></i> Monthly Revenue Report</h3>
+                <div class="table-responsive report-table-scroll-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Bookings</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-monthly-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="report-table-box glass-card">
+                <h3><i class="fa-solid fa-calendar-minus text-accent"></i> Weekly Activity Log</h3>
+                <div class="table-responsive report-table-scroll-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Week No.</th>
+                                <th>Sessions</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-weekly-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PANEL 2: MANAGE COURTS & SLOTS -->
+    <section class="admin-panel hidden" id="admin-panel-slots">
+        
+        <div class="slots-management-layout">
+            <!-- Left Side: Slot Creation and selectors -->
+            <div class="management-controls glass-card">
+                <h3>Create New Slot</h3>
+                <form id="form-create-slot" onsubmit="createSlot(event)">
+                    <div class="form-group">
+                        <label for="slot-new-court-select"><i class="fa-solid fa-table-tennis-paddle-ball text-accent"></i> Target Court</label>
+                        <select id="slot-new-court-select" class="booking-input" required>
+                            <!-- Will be loaded dynamically with courts list -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="slot-new-start"><i class="fa-regular fa-clock text-accent"></i> Start Time (12-hour format)</label>
+                        <input type="text" id="slot-new-start" placeholder="e.g., 06:00 AM" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="slot-new-end"><i class="fa-regular fa-clock text-accent"></i> End Time (12-hour format)</label>
+                        <input type="text" id="slot-new-end" placeholder="e.g., 07:00 AM" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="slot-new-price"><i class="fa-solid fa-indian-rupee-sign text-accent"></i> Default Price (₹/person)</label>
+                        <input type="number" id="slot-new-price" value="50" min="10" step="5" required>
+                    </div>
+                    <button type="submit" class="btn-auth-submit">Create Slot <i class="fa-solid fa-circle-plus"></i></button>
+                </form>
+
+                <div class="divider"></div>
+
+                <h3>Edit Slots Availability</h3>
+                <div class="form-group">
+                    <label for="admin-court-select">Select Court</label>
+                    <select id="admin-court-select" class="booking-input">
+                        <!-- Loaded dynamically or filled during loading -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="admin-date-select">Select Date</label>
+                    <input type="date" id="admin-date-select" class="booking-input">
+                </div>
+            </div>
+
+            <!-- Right Side: Slots Grid with Admin Actions -->
+            <div class="management-grid-box glass-card">
+                <h3>Court Slots (Click to Modify / Block / Pricing)</h3>
+                <p class="subtext">Click any slot card to modify price or toggle block restrictions for the selected date.</p>
+                
+                <div class="slots-legend">
+                    <div class="legend-item"><span class="legend-dot dot-available"></span> Active</div>
+                    <div class="legend-item"><span class="legend-dot dot-booked"></span> Reserved</div>
+                    <div class="legend-item"><span class="legend-dot dot-blocked"></span> Blocked</div>
+                </div>
+
+                <div class="slots-grid-container" id="admin-slots-grid">
+                    <!-- Populated via admin.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SLOT MODIFICATION MODAL -->
+        <div class="modal-overlay hidden" id="modal-edit-slot">
+            <div class="modal-card glass-card slide-up">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-gear text-accent"></i> Modify Court Slot</h3>
+                    <button class="modal-close-btn" onclick="closeEditSlotModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="booking-summary-list">
+                        <div class="summary-item">
+                            <span class="label">Time:</span>
+                            <span class="value" id="edit-slot-summary-time">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Date:</span>
+                            <span class="value" id="edit-slot-summary-date">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Update Pricing Form -->
+                    <div class="form-group margin-top">
+                        <label for="edit-slot-price">Hourly Slot Pricing (₹)</label>
+                        <input type="number" id="edit-slot-price" min="50" step="10">
+                        <span class="subtext">Changes apply only to the selected date.</span>
+                    </div>
+
+                    <!-- Toggle Restriction / Blockage -->
+                    <div class="form-group">
+                        <label for="edit-slot-block-toggle">Block this Slot?</label>
+                        <select id="edit-slot-block-toggle" onchange="toggleBlockReasonInput()">
+                            <option value="0">No - Open for Bookings</option>
+                            <option value="1">Yes - Block Slot</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group hidden" id="edit-slot-reason-box">
+                        <label for="edit-slot-reason">Reason for Blocking</label>
+                        <input type="text" id="edit-slot-reason" placeholder="e.g., Tournament, Repairs">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modal-cancel" onclick="closeEditSlotModal()">Close</button>
+                    <button class="btn-modal-confirm" onclick="saveSlotConfiguration()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PANEL 3: BOOKINGS LOG MONITOR -->
+    <section class="admin-panel" id="admin-panel-bookings">
+        <div class="panel-section-title">
+            <h3>Complete Bookings History</h3>
+            <p>Review customer reservations and cancellations.</p>
+        </div>
+
+        <div class="glass-card">
+            <div class="table-responsive bookings-log-table-container">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>User Details</th>
+                            <th>Court</th>
+                            <th>Time Range</th>
+                            <th>Players</th>
+                            <th>Revenue</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookings-log-body">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- PANEL 4: CUSTOMER QUERIES (COMPLAINTS) -->
+    <section class="admin-panel hidden" id="admin-panel-queries">
+        <div class="panel-section-title">
+            <h3>Customer Complaints & Requests</h3>
+            <p>Reply to pending tickets and resolve academy issues.</p>
+        </div>
+
+        <div class="queries-admin-container" id="admin-queries-list">
+            <!-- Dynamically populated complaints -->
+        </div>
+
+        <!-- QUERY REPLY MODAL -->
+        <div class="modal-overlay hidden" id="modal-reply-query">
+            <div class="modal-card glass-card slide-up">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-reply text-accent"></i> Compose Ticket Reply</h3>
+                    <button class="modal-close-btn" onclick="closeReplyModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="booking-summary-list">
+                        <div class="summary-item">
+                            <span class="label">User:</span>
+                            <span class="value" id="reply-modal-username">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Subject:</span>
+                            <span class="value" id="reply-modal-subject">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Complaint:</span>
+                            <span class="value block-text" id="reply-modal-complaint">-</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group margin-top">
+                        <label for="reply-modal-message">Admin Response Message</label>
+                        <textarea id="reply-modal-message" rows="5" placeholder="Type your response..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modal-cancel" onclick="closeReplyModal()">Discard</button>
+                    <button class="btn-modal-confirm" onclick="submitQueryReply()">Submit Reply</button>
+                </div>
+            </div>
+    </section>
+
+    <!-- PANEL 5: MEMBERSHIP TRACKING -->
+    <section class="admin-panel hidden" id="admin-panel-memberships">
+        <div class="panel-section-title">
+            <h3>Membership Subscriptions Tracking</h3>
+            <p>Review customer long-term subscription packages and cancel upcoming agreements.</p>
+        </div>
+
+        <div class="glass-card">
+            <div class="table-responsive bookings-log-table-container">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Subscription Period</th>
+                            <th>User Details</th>
+                            <th>Court</th>
+                            <th>Time Range</th>
+                            <th>Duration</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberships-log-body">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include admin script -->
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

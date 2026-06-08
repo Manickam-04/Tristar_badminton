@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tristar Badminton Academy{% endblock %}</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Vector Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Website Favicon / Title Image Icon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="dark-theme">
+
+    <!-- Global App Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <button class="hamburger-btn" id="sidebar-toggle" aria-label="Toggle Navigation">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </button>
+            <div class="app-logo">
+                <a href="{{ url_for('home') }}">
+                    <span><span class="logo-accent">Tristar</span> Badminton</span>
+                </a>
+            </div>
+            <div class="user-status-indicator">
+                {% if user %}
+                    <a href="{{ url_for('profile_page') }}" class="user-badge" title="Go to Dashboard">
+                        <i class="fa-solid fa-user-circle"></i>
+                        <span class="user-name-text">{{ user.name.split()[0] }}</span>
+                        {% if user.role == 'admin' %}
+                            <span class="admin-tag">Admin</span>
+                        {% endif %}
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login_page') }}" class="btn-login-header">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Interactive Sidebar Drawer -->
+    <aside class="sidebar-drawer" id="app-sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Tristar Logo" class="sidebar-logo-img">
+                <span><span class="logo-accent">Tristar</span> Academy</span>
+            </div>
+            <button class="close-sidebar-btn" id="sidebar-close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="{{ url_for('home') }}" class="menu-item {% if request.path == '/' %}active{% endif %}">
+                <i class="fa-solid fa-house-chimney"></i> <span>Home</span>
+            </a>
+            <a href="{{ url_for('home') }}#membership-booking" class="menu-item">
+                <i class="fa-solid fa-id-card"></i> <span>Book Membership</span>
+            </a>
+            
+            {% if user %}
+                <a href="{{ url_for('booking_page') }}" class="menu-item {% if request.path == '/booking' %}active{% endif %}">
+                    <i class="fa-solid fa-calendar-check"></i> <span>Book Slot</span>
+                </a>
+                <a href="{{ url_for('profile_page') }}" class="menu-item {% if request.path == '/profile' and not request.args.get('tab') %}active{% endif %}">
+                    <i class="fa-solid fa-address-card"></i> <span>My Bookings</span>
+                </a>
+                <a href="{{ url_for('profile_page') }}?tab=support" class="menu-item {% if request.path == '/profile' and request.args.get('tab') == 'support' %}active{% endif %}">
+                    <i class="fa-solid fa-headset"></i> <span>Help & Support</span>
+                </a>
+                
+                {% if user.role == 'admin' %}
+                    <div class="menu-divider">Admin Controls</div>
+                    <a href="{{ url_for('admin_page') }}?tab=bookings" class="menu-item {% if request.path == '/admin' and (request.args.get('tab') == 'bookings' or not request.args.get('tab')) %}active{% endif %}">
+                        <i class="fa-solid fa-clipboard-list"></i> <span>Booking Logs</span>
+                    </a>
+                    <a href="{{ url_for('admin_page') }}?tab=slots" class="menu-item {% if request.path == '/admin' and request.args.get('tab') == 'slots' %}active{% endif %}">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> <span>Manage Slots</span>
+                    </a>
+                    <a href="{{ url_for('admin_page') }}?tab=queries" class="menu-item {% if request.path == '/admin' and request.args.get('tab') == 'queries' %}active{% endif %}">
+                        <i class="fa-solid fa-comments"></i> <span>User Query</span>
+                    </a>
+                    <a href="{{ url_for('admin_page') }}?tab=metrics" class="menu-item {% if request.path == '/admin' and request.args.get('tab') == 'metrics' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-line"></i> <span>Statistics & Report</span>
+                    </a>
+                {% endif %}
+                
+                <a href="{{ url_for('logout') }}" class="menu-item logout-item">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Sign Out</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('login_page') }}" class="menu-item {% if request.path == '/login' %}active{% endif %}">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> <span>Login / Sign Up</span>
+                </a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-footer">
+            <p>Tristar Badminton Academy</p>
+            <span class="version">v1.2.0</span>
+        </div>
+    </aside>
+
+    <!-- Overlay backdrop for sidebar -->
+    <div class="sidebar-overlay" id="sidebar-backdrop"></div>
+
+    <!-- Active Toast Alert System Container -->
+    <div class="toast-container" id="toast-root"></div>
+
+    <!-- Background In-App Alerts Banner -->
+    {% if user %}
+    <div id="live-notification-banner" class="notification-banner hidden">
+        <div class="banner-content">
+            <i class="fa-solid fa-bell-ring fa-bounce text-accent"></i>
+            <span id="banner-text">Alert details go here...</span>
+            <button id="banner-close" class="banner-close-btn">&times;</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Premium Footer with Location and Contact -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Tristar Badminton Academy</h3>
+                <p>Train with professionals. Premium synthetic courts, experienced trainers, and exciting weekend memberships.</p>
+            </div>
+            
+            <div class="footer-contact">
+                <h4>Contact Details</h4>
+                <p><i class="fa-solid fa-phone text-accent"></i> +91 9994093575</p>
+                <p><i class="fa-solid fa-envelope text-accent"></i> contact@tristarbadminton.com</p>
+                <p><i class="fa-solid fa-clock text-accent"></i> Open Everyday: 4 AM - 11 PM</p>
+            </div>
+
+            <div class="footer-location">
+                <h4>Location & Address</h4>
+                <p><i class="fa-solid fa-location-dot text-accent"></i> 19, 2nd Floor, 3rd Street, Chellaperumal Nagar, Sriperumbudur, Tamil Nadu 602105</p>
+                <a href="https://maps.app.goo.gl/WXbgqJstA849QabF7" target="_blank" class="gmaps-link-btn">
+                    <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Tristar Badminton Academy. All rights reserved. Designed with visual excellence.</p>
+        </div>
+    </footer>
+
+    <!-- Global Application Scripts -->
+    <script>
+        // Setup simple sidebar toggle functionality
+        const sidebar = document.getElementById('app-sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const closeBtn = document.getElementById('sidebar-close');
+        const backdrop = document.getElementById('sidebar-backdrop');
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            backdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            backdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (backdrop) backdrop.addEventListener('click', closeSidebar);
+
+        // Close sidebar drawer when a menu item is clicked
+        document.querySelectorAll('.menu-item').forEach(link => {
+            link.addEventListener('click', closeSidebar);
+        });
+
+        // Global Toast Notification Helper
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-root');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let iconClass = 'fa-check-circle';
+            if (type === 'error') iconClass = 'fa-times-circle';
+            if (type === 'warning') iconClass = 'fa-exclamation-circle';
+            if (type === 'info') iconClass = 'fa-info-circle';
+
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} toast-icon"></i>
+                <span class="toast-msg">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate In and then fade out
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        };
+
+        // Check for pending success messages (e.g. after returning back from payment gateway)
+        function checkPendingBookingMessage() {
+            const pendingMsg = sessionStorage.getItem('booking_success_msg');
+            if (pendingMsg) {
+                window.showToast(pendingMsg, 'success');
+                sessionStorage.removeItem('booking_success_msg');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkPendingBookingMessage();
+        });
+
+        window.addEventListener('pageshow', (event) => {
+            checkPendingBookingMessage();
+            
+            // On mobile iOS/Android, force reload slots when page is restored from cache (bfcache)
+            const isBackNavigation = event.persisted || 
+                                     (window.performance && window.performance.navigation && window.performance.navigation.type === 2) ||
+                                     (window.performance && typeof window.performance.getEntriesByType === 'function' && 
+                                      window.performance.getEntriesByType("navigation")[0] && 
+                                      window.performance.getEntriesByType("navigation")[0].type === "back_forward");
+                                      
+            if (isBackNavigation) {
+                if (typeof loadLiveSlots === 'function') {
+                    loadLiveSlots();
+                }
+            }
+        });
+
+        // Pre-30 minutes notifications polling (Runs client-side every 20 seconds if logged in)
+        {% if user %}
+        function pollNotifications() {
+            fetch('/api/notifications')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.alerts && data.alerts.length > 0) {
+                        const banner = document.getElementById('live-notification-banner');
+                        const bannerText = document.getElementById('banner-text');
+                        if (banner && bannerText) {
+                            // Show first alert in the banner
+                            bannerText.innerText = data.alerts[0].message;
+                            banner.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch(err => console.error("Error polling alerts:", err));
+        }
+
+        // Run immediately, then repeat every 25 seconds
+        pollNotifications();
+        setInterval(pollNotifications, 25000);
+
+        const bannerClose = document.getElementById('banner-close');
+        if (bannerClose) {
+            bannerClose.addEventListener('click', () => {
+                document.getElementById('live-notification-banner').classList.add('hidden');
+            });
+        }
+        {% endif %}
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

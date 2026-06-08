@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Tristar Badminton Academy - Live Slot Booking{% endblock %}
+
+{% block content %}
+<div class="booking-page-container">
+    
+    <!-- Header info banner -->
+    <div class="booking-info-card glass-card">
+        <div class="info-card-text">
+            <h2>Reserve Your Arena</h2>
+            <p>Select your date, view active hourly slots, choose your players count and play!</p>
+        </div>
+        <div class="info-card-icon">
+            <i class="fa-solid fa-calendar-check text-accent"></i>
+        </div>
+    </div>
+
+    <!-- Booking Selection Panel -->
+    <section class="booking-controls-section">
+        <!-- Date Selector -->
+        <div class="control-box glass-card">
+            <label for="booking-date-picker"><i class="fa-solid fa-calendar-days text-accent"></i> Select Date</label>
+            <input type="date" id="booking-date-picker" class="booking-input">
+        </div>
+
+        <!-- Court Selector -->
+        <div class="control-box glass-card">
+            <label for="booking-court-select"><i class="fa-solid fa-table-tennis-paddle-ball text-accent"></i> Select Court</label>
+            <select id="booking-court-select" class="booking-input">
+                {% for court in courts %}
+                    <option value="{{ court.id }}">{{ court.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </section>
+
+    <!-- Legend bar explaining colors -->
+    <div class="slots-legend glass-card">
+        <div class="legend-item"><span class="legend-dot dot-available"></span> Available</div>
+        <div class="legend-item"><span class="legend-dot dot-booked-me"></span> Your Booking</div>
+        <div class="legend-item"><span class="legend-dot dot-booked"></span> Booked</div>
+        <div class="legend-item"><span class="legend-dot dot-blocked"></span> Blocked</div>
+        <div class="legend-item"><span class="legend-dot dot-expired"></span> Expired</div>
+    </div>
+
+    <!-- Live Grid of Slots -->
+    <section class="slots-display-section">
+        <div class="slots-grid-header">
+            <h3>Hourly Slots Grid</h3>
+            <span class="active-date-label" id="current-selected-date-label">Today</span>
+        </div>
+        
+        <!-- Loading state -->
+        <div id="slots-loading" class="slots-loading-spinner hidden">
+            <i class="fa-solid fa-spinner fa-spin"></i> Loading live court availability...
+        </div>
+
+        <!-- Grid layout container -->
+        <div class="slots-grid-container" id="slots-grid">
+            <!-- Dynamically populated via main.js -->
+        </div>
+    </section>
+
+    <!-- CONFIRM BOOKING MODAL -->
+    <div class="modal-overlay hidden" id="modal-confirm-booking">
+        <div class="modal-card glass-card slide-up">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-check text-accent"></i> Confirm Court Booking</h3>
+                <button class="modal-close-btn" onclick="closeBookingModal('confirm')">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="booking-summary-list">
+                    <div class="summary-item">
+                        <span class="label">Court:</span>
+                        <span class="value" id="modal-summary-court">Tristar Premier Court</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Date:</span>
+                        <span class="value" id="modal-summary-date">2026-06-02</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Time Slot:</span>
+                        <span class="value" id="modal-summary-time">08:00 AM - 09:00 AM</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Hourly Price:</span>
+                        <span class="value text-accent" id="modal-summary-price">₹500.00</span>
+                    </div>
+                </div>
+
+                <div class="booking-inputs-block" id="modal-members-container">
+                    <!-- Players Count -->
+                    <div class="input-row">
+                        <label for="booking-members-count">
+                            <strong><i class="fa-solid fa-users text-accent"></i> Total Members / Players:</strong>
+                            <span class="subtext">Include yourself</span>
+                        </label>
+                        <div class="players-counter">
+                            <button type="button" class="counter-btn" onclick="adjustPlayers(-1)">-</button>
+                            <input type="number" id="booking-members-count" value="2" min="1" readonly>
+                            <button type="button" class="counter-btn" onclick="adjustPlayers(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cancellation-policy-hint">
+                    <i class="fa-solid fa-circle-info"></i> After payment done, press back for slot confirmation.
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-modal-cancel" onclick="closeBookingModal('confirm')">Cancel</button>
+                <button class="btn-modal-confirm" id="btn-submit-booking-action">
+                    <i class="fa-solid fa-credit-card"></i> Pay & Book Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANCEL BOOKING MODAL -->
+    <div class="modal-overlay hidden" id="modal-cancel-booking">
+        <div class="modal-card glass-card slide-up">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-exclamation text-error"></i> Cancel Booking</h3>
+                <button class="modal-close-btn" onclick="closeBookingModal('cancel')">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this booking? The slot will immediately become available for other players.</p>
+                
+                <div class="booking-summary-list cancel-summary">
+                    <div class="summary-item">
+                        <span class="label">Court:</span>
+                        <span class="value" id="cancel-summary-court">Tristar Premier Court</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Date:</span>
+                        <span class="value" id="cancel-summary-date">2026-06-02</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Time:</span>
+                        <span class="value" id="cancel-summary-time">08:00 AM - 09:00 AM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-modal-cancel" onclick="closeBookingModal('cancel')">Keep Booking</button>
+                <button class="btn-modal-confirm btn-danger" id="btn-submit-cancellation-action">
+                    <i class="fa-solid fa-trash-can"></i> Confirm Cancellation
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include main booking script -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

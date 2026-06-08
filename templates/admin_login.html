@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Tristar Badminton Academy - Admin Portal{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card glass-card admin-auth-card">
+        
+        <div class="admin-shield-icon">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+
+        <div class="panel-header text-center">
+            <h2>Admin Portal</h2>
+            <p>Access court management, slot configuration, blockages, pricing overrides, and monthly reports.</p>
+        </div>
+        
+        <form id="form-admin-login" onsubmit="handleAdminLogin(event)">
+            <div class="form-group">
+                <label for="admin-email"><i class="fa-solid fa-envelope"></i> Admin Email</label>
+                <input type="email" id="admin-email" required placeholder="admin@tristar.com" value="admin@tristar.com" autocomplete="email">
+            </div>
+            
+            <div class="form-group">
+                <label for="admin-password"><i class="fa-solid fa-key"></i> Password</label>
+                <input type="password" id="admin-password" required placeholder="••••••••" value="admin123" autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-auth-submit btn-admin-submit">
+                <span>Secure Sign In</span> <i class="fa-solid fa-shield-halved"></i>
+            </button>
+        </form>
+
+        <div class="credentials-helper card-hint text-center">
+            <p>Default credentials filled for instant review.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function handleAdminLogin(event) {
+        event.preventDefault();
+        
+        const payload = {
+            email: document.getElementById('admin-email').value,
+            password: document.getElementById('admin-password').value,
+            role: 'admin'
+        };
+
+        fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.showToast("Admin access authenticated!", 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin';
+                }, 1000);
+            } else {
+                window.showToast(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error("Admin Auth error:", err);
+            window.showToast("Admin portal connection failed.", 'error');
+        });
+    }
+</script>
+{% endblock %}
