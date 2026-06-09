@@ -117,3 +117,36 @@ To ease operational review, the Admin Dashboard groups all booking records by da
 * **Theme Customization**: All colors are controlled via CSS variables at the top of `static/css/style.css`.
 * **Membership Customization**: See `developer_customization_guide.md` for instructions on changing eligible membership hours, adjusting conflict rules, or altering UI sorting routines.
 * **Deployment & Backups**: See `deployment_guide.md` for information on Railway deployments, volumes, and running the `restore.py` database backup utility.
+
+1. View Table Structure (Columns & Types)
+To view the schema details (column names and their data types) of a specific table, run the following:
+
+For users table structure:
+
+powershell-
+python -c "import sqlite3; conn = sqlite3.connect('badminton.db'); conn.row_factory = sqlite3.Row; [print(r['name'], r['type']) for r in conn.execute('PRAGMA table_info(users)').fetchall()]"
+
+For bookings table structure:
+
+powershell-
+python -c "import sqlite3; conn = sqlite3.connect('badminton.db'); conn.row_factory = sqlite3.Row; [print(r['name'], r['type']) for r in conn.execute('PRAGMA table_info(bookings)').fetchall()]"
+
+(Note: You can replace users or bookings with any other table name like courts, slots, memberships, etc.)
+
+2. View Table Rows & Data Details
+To view all the registered records/rows inside a table formatted as a Python dictionary:
+
+View all registered users:
+
+powershell-
+python -c "import sqlite3; conn = sqlite3.connect('badminton.db'); conn.row_factory = sqlite3.Row; [print(dict(r)) for r in conn.execute('SELECT * FROM users').fetchall()]"
+
+View all bookings:
+
+powershell-
+python -c "import sqlite3; conn = sqlite3.connect('badminton.db'); conn.row_factory = sqlite3.Row; [print(dict(r)) for r in conn.execute('SELECT * FROM bookings').fetchall()]"
+
+View all memberships:
+
+powershell-
+python -c "import sqlite3; conn = sqlite3.connect('badminton.db'); conn.row_factory = sqlite3.Row; [print(dict(r)) for r in conn.execute('SELECT * FROM memberships').fetchall()]"
