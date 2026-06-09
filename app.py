@@ -878,7 +878,10 @@ def api_cancel_booking():
                 conn.rollback()
                 return jsonify({'success': False, 'message': 'Membership is already cancelled.'}), 400
                 
-            conn.execute("UPDATE memberships SET status = 'cancelled' WHERE id = ?", (membership_id,))
+            conn.execute(
+                "UPDATE memberships SET status = 'cancelled', cancelled_at = ? WHERE id = ?", 
+                (get_local_now().strftime('%Y-%m-%d %H:%M:%S'), membership_id)
+            )
             conn.commit()
             return jsonify({'success': True, 'message': 'Membership subscription cancelled successfully.'})
             
@@ -917,7 +920,10 @@ def api_cancel_booking():
                 conn.rollback()
                 return jsonify({'success': False, 'message': 'Booking is already cancelled.'}), 400
                 
-            conn.execute("UPDATE bookings SET status = 'cancelled' WHERE id = ?", (booking_id,))
+            conn.execute(
+                "UPDATE bookings SET status = 'cancelled', cancelled_at = ? WHERE id = ?", 
+                (get_local_now().strftime('%Y-%m-%d %H:%M:%S'), booking_id)
+            )
             conn.commit()
             return jsonify({'success': True, 'message': 'Booking cancelled successfully.'})
             
@@ -940,7 +946,7 @@ def api_bookings_history():
         # Fetch user's bookings joined with court details and slot details
         bookings = conn.execute(
             """
-            SELECT b.id as booking_id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at,
+            SELECT b.id as booking_id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at, b.cancelled_at,
                    c.name as court_name, s.start_time, s.end_time
             FROM bookings b
             JOIN courts c ON b.court_id = c.id
@@ -953,7 +959,7 @@ def api_bookings_history():
         # Fetch user's memberships joined with court details and slot details
         memberships = conn.execute(
             """
-            SELECT m.id as membership_id, m.start_date, m.end_date, m.duration, m.amount, m.status, m.created_at,
+            SELECT m.id as membership_id, m.start_date, m.end_date, m.duration, m.amount, m.status, m.created_at, m.cancelled_at,
                    c.name as court_name, s.start_time, s.end_time
             FROM memberships m
             JOIN courts c ON m.court_id = c.id
@@ -972,6 +978,7 @@ def api_bookings_history():
                 'price': b['total_price'],
                 'status': b['status'],
                 'created_at': b['created_at'],
+                'cancelled_at': b['cancelled_at'],
                 'court_name': b['court_name'],
                 'time': f"{b['start_time']} - {b['end_time']}",
                 'type': 'hourly',
@@ -986,6 +993,7 @@ def api_bookings_history():
                 'price': m['amount'],
                 'status': m['status'],
                 'created_at': m['created_at'],
+                'cancelled_at': m['cancelled_at'],
                 'court_name': m['court_name'],
                 'time': f"{m['start_time']} - {m['end_time']}",
                 'type': 'membership',
@@ -1294,7 +1302,7 @@ def admin_api_bookings():
         # Fetch all active bookings in chronological order
         bookings = conn.execute(
             """
-            SELECT b.id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at,
+            SELECT b.id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at, b.cancelled_at,
                    c.name as court_name, s.start_time, s.end_time, u.name as user_name, u.email as user_email, u.mobile as user_mobile
             FROM bookings b
             JOIN courts c ON b.court_id = c.id
@@ -1327,6 +1335,7 @@ def admin_api_bookings():
                 'status': b['status'],
                 'is_completed': is_completed,
                 'created_at': b['created_at'],
+                'cancelled_at': b['cancelled_at'],
                 'court_name': b['court_name'],
                 'time_range': f"{b['start_time']} - {b['end_time']}",
                 'user_name': b['user_name'],
@@ -1352,7 +1361,7 @@ def admin_api_memberships():
     try:
         memberships = conn.execute(
             """
-            SELECT m.id, m.start_date, m.end_date, m.duration, m.amount, m.status, m.created_at,
+            SELECT m.id, m.start_date, m.end_date, m.duration, m.amount, m.status, m.created_at, m.cancelled_at,
                    c.name as court_name, s.start_time, s.end_time, u.name as user_name, u.email as user_email, u.mobile as user_mobile
             FROM memberships m
             JOIN courts c ON m.court_id = c.id
@@ -1382,6 +1391,7 @@ def admin_api_memberships():
                 'status': m['status'],
                 'is_completed': is_completed,
                 'created_at': m['created_at'],
+                'cancelled_at': m['cancelled_at'],
                 'court_name': m['court_name'],
                 'time_range': f"{m['start_time']} - {m['end_time']}",
                 'user_name': m['user_name'],

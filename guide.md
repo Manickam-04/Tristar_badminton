@@ -150,3 +150,29 @@ View all memberships:
 
 powershell-
 python -c "import sqlite3; conn = sqlite3.connect('badminton.db'); conn.row_factory = sqlite3.Row; [print(dict(r)) for r in conn.execute('SELECT * FROM memberships').fetchall()]"
+
+---
+
+## 6. Modern Interactive UPI Payments & Cancellation Log Features
+
+To provide a state-of-the-art booking experience, several premium modules have been integrated:
+
+### A. Inline UPI QR Code Payment Modal & Mobile Preview
+- **Inline Modal Layout**: Replaced external redirects with a premium, touch-friendly, glassmorphic modal (`#modal-upi-payment`) matching the exact court rate amount (`50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 750, 1200`).
+- **10-Second Verification Timer**: Prompts a 10s countdown upon clicking download to allow payment processing.
+- **Mobile Long-Press Overlay**: On mobile devices, a touch-optimized overlay (`#mobile-qr-overlay`) displays, instructing the user to long-press the QR image to save it to their Photos/Gallery.
+- **Confirm Payment Prompt**: Once the countdown is complete, a modal prompt asks: *"Did you complete the payment through your UPI app?"*. Clicking **Yes** redirects to `/profile` with a success toast; clicking **No** immediately triggers a background API cancellation call to release the slot and shows a failure notification.
+
+### B. Prevention of Accidental Reloads & State Recovery
+- **Navigation Guard**: When the payment modal is open, a browser navigation interceptor (`beforeunload`) warns users about leaving or refreshing the page.
+- **State Recovery**: The active payment modal's state (including booking ID, rate, and seconds remaining) is tracked in `sessionStorage`. If the user accidentally refreshes, the app automatically restores the exact state and countdown time they left off.
+
+### C. Cancellation Timestamps in Admin & User Logs
+- **Dynamic Database Schema**: Database automatically runs migrations to append the `cancelled_at` text column to both the `bookings` and `memberships` tables.
+- **Admin Dashboard**: Under the **Action** column in both the Bookings and Memberships table panels, administrators see the exact date and time of cancellations (e.g. `Cancelled: 2026-06-09 23:30:00`).
+- **User Dashboard**: On `/profile`, the booking/membership card footer displays the `Cancelled on: [Date/Time]` stamp on the right-hand side, directly **opposite to the "Booked on" date** on the left.
+
+### D. Cross-Page Toast Flows & Reduced Durations
+- **Redirect Session Toasts**: Auth flows (login, registration) save success notifications to `sessionStorage` and redirect immediately, allowing the toast to render on the target page cleanly.
+- **Optimized Durations**: To keep alerts fast and non-obtrusive, standard toasts (success/warning/error) are now dismissed after **2.5 seconds** (down from 4s), and action-required toasts (e.g. agreement downloads) show for **5 seconds** (down from 12s).
+

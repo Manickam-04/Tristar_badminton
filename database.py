@@ -55,6 +55,22 @@ def init_db():
             cursor.execute("UPDATE users SET mobile = '9876543211' WHERE email = 'user@tristar.com';")
             conn.commit()
             print("Migrated database: added mobile column to users table.")
+
+        # Migration: check if cancelled_at column exists in bookings table
+        cursor.execute("PRAGMA table_info(bookings)")
+        booking_cols = [row[1] for row in cursor.fetchall()]
+        if booking_cols and 'cancelled_at' not in booking_cols:
+            cursor.execute("ALTER TABLE bookings ADD COLUMN cancelled_at TEXT;")
+            conn.commit()
+            print("Migrated database: added cancelled_at column to bookings table.")
+
+        # Migration: check if cancelled_at column exists in memberships table
+        cursor.execute("PRAGMA table_info(memberships)")
+        membership_cols = [row[1] for row in cursor.fetchall()]
+        if membership_cols and 'cancelled_at' not in membership_cols:
+            cursor.execute("ALTER TABLE memberships ADD COLUMN cancelled_at TEXT;")
+            conn.commit()
+            print("Migrated database: added cancelled_at column to memberships table.")
         
         # Always ensure index is created
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_mobile ON users(mobile);")

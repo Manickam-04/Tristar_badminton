@@ -213,16 +213,14 @@
                         localStorage.removeItem('remembered_identity');
                     }
                 }
-                window.showToast(data.message, 'success');
-                setTimeout(() => {
-                    if (data.role === 'admin') {
-                        window.location.href = '/admin';
-                    } else {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const nextUrl = urlParams.get('next') || '/';
-                        window.location.href = nextUrl;
-                    }
-                }, 1000);
+                sessionStorage.setItem('pending_toast', JSON.stringify({message: data.message, type: 'success'}));
+                if (data.role === 'admin') {
+                    window.location.href = '/admin';
+                } else {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const nextUrl = urlParams.get('next') || '/';
+                    window.location.href = nextUrl;
+                }
             } else {
                 window.showToast(data.message, 'error');
             }

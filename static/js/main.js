@@ -282,8 +282,8 @@ function processBookingSubmit() {
         if (data.success) {
             sessionStorage.setItem('booking_success_msg', data.message);
             const amount = (data.booking && data.booking.total_price) ? data.booking.total_price : 0;
-            const paymentUrl = `https://upi.pe/bharatpe.0102864147@indus/${Math.round(amount)}.00`;
-            window.location.href = paymentUrl;
+            const bookingId = (data.booking && data.booking.id) ? data.booking.id : null;
+            window.showUPIPaymentModal(amount, '/profile', bookingId);
         } else {
             window.showToast(data.message, 'error');
         }

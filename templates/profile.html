@@ -188,194 +188,6 @@
         mobile: "{{ user.mobile if user and user.mobile else '' }}"
     };
     
-    // Canvas agreement generation function
-    function downloadAgreementImage(details) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1200;
-        canvas.height = 850;
-        const ctx = canvas.getContext('2d');
-        
-        // Background Gradient
-        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, '#0a1128');
-        grad.addColorStop(0.5, '#102a43');
-        grad.addColorStop(1, '#072236');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Inner Glassmorphism Panel
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-        ctx.beginPath();
-        if (ctx.roundRect) {
-            ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 20);
-        } else {
-            ctx.rect(40, 40, canvas.width - 80, canvas.height - 80);
-        }
-        ctx.fill();
-        
-        // Emerald Border
-        ctx.strokeStyle = '#10B981';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        if (ctx.roundRect) {
-            ctx.roundRect(45, 45, canvas.width - 90, canvas.height - 90, 18);
-        } else {
-            ctx.rect(45, 45, canvas.width - 90, canvas.height - 90);
-        }
-        ctx.stroke();
-        
-        // Gold Border
-        ctx.strokeStyle = '#FBBF24';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        if (ctx.roundRect) {
-            ctx.roundRect(55, 55, canvas.width - 110, canvas.height - 110, 15);
-        } else {
-            ctx.rect(55, 55, canvas.width - 110, canvas.height - 110);
-        }
-        ctx.stroke();
-        
-        // Shield Decoration
-        ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = '#10B981';
-        ctx.beginPath();
-        ctx.moveTo(600, 90);
-        ctx.lineTo(630, 120);
-        ctx.lineTo(600, 150);
-        ctx.lineTo(570, 120);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Gold Star Inside Shield
-        ctx.fillStyle = '#FBBF24';
-        ctx.beginPath();
-        ctx.moveTo(600, 105);
-        ctx.lineTo(610, 120);
-        ctx.lineTo(600, 135);
-        ctx.lineTo(590, 120);
-        ctx.closePath();
-        ctx.fill();
-        
-        ctx.shadowBlur = 0;
-        
-        // Header Text
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '800 32px "Outfit", sans-serif';
-        ctx.fillText('TRISTAR BADMINTON ACADEMY', 600, 205);
-        
-        ctx.fillStyle = '#10B981';
-        ctx.font = '600 16px "Outfit", sans-serif';
-        ctx.fillText('OFFICIAL MEMBERSHIP SUBSCRIPTION AGREEMENT', 600, 235);
-        
-        // Divider line
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(200, 260);
-        ctx.lineTo(1000, 260);
-        ctx.stroke();
-        
-        // Description
-        ctx.fillStyle = '#E2E8F0';
-        ctx.font = 'italic 15px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('This agreement certifies that the slot reservation is locked and confirmed for the period listed below.', 600, 295);
-        
-        // Detail drawer helper
-        function drawDetailItem(x, y, label, value, valColor = '#FFFFFF') {
-            ctx.textAlign = 'left';
-            ctx.fillStyle = '#94A3B8';
-            ctx.font = '600 13px "Outfit", sans-serif';
-            ctx.fillText(label.toUpperCase(), x, y);
-            
-            ctx.fillStyle = valColor;
-            ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText(value, x, y + 25);
-        }
-        
-        // Left Column (Member Info)
-        let currentY = 360;
-        const startXLeft = 130;
-        drawDetailItem(startXLeft, currentY, 'Member Name', details.name || 'Anonymous User');
-        currentY += 65;
-        drawDetailItem(startXLeft, currentY, 'Registered Email', details.email || '—');
-        currentY += 65;
-        drawDetailItem(startXLeft, currentY, 'Mobile Number', details.mobile || '—');
-        currentY += 65;
-        drawDetailItem(startXLeft, currentY, 'Agreement ID', `TBA-MEM-${details.membership_id.toString().padStart(5, '0')}`, '#FBBF24');
-        
-        // Right Column (Subscription Info)
-        currentY = 360;
-        const startXRight = 630;
-        drawDetailItem(startXRight, currentY, 'Reserved Court Name', details.court_name);
-        currentY += 65;
-        drawDetailItem(startXRight, currentY, 'Daily Time Slot', details.time_range);
-        currentY += 65;
-        drawDetailItem(startXRight, currentY, 'Validity Period', `${details.start_date} to ${details.end_date}`, '#10B981');
-        currentY += 65;
-        drawDetailItem(startXRight, currentY, 'Duration & Amount Paid', `${details.duration} Plan  |  ₹${parseFloat(details.amount).toLocaleString('en-IN')}.00 (FULLY PAID)`, '#34D399');
-        
-        // Divider
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.beginPath();
-        ctx.moveTo(130, 640);
-        ctx.lineTo(1070, 640);
-        ctx.stroke();
-        
-        // Circular Seal
-        ctx.shadowColor = 'rgba(251, 191, 36, 0.3)';
-        ctx.shadowBlur = 10;
-        ctx.strokeStyle = '#FBBF24';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(220, 725, 45, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        ctx.fillStyle = '#FBBF24';
-        ctx.font = 'bold 10px "Outfit", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('TRISTAR', 220, 715);
-        ctx.font = '800 11px "Outfit", sans-serif';
-        ctx.fillText('APPROVED', 220, 730);
-        ctx.font = 'bold 9px "Outfit", sans-serif';
-        ctx.fillText('SEAL', 220, 743);
-        ctx.shadowBlur = 0;
-        
-        // Signatures
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#E2E8F0';
-        ctx.font = 'italic 16px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('Tristar Academy Executive Board', 1070, 715);
-        
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(850, 730);
-        ctx.lineTo(1070, 730);
-        ctx.stroke();
-        
-        ctx.fillStyle = '#94A3B8';
-        ctx.font = '600 11px "Outfit", sans-serif';
-        ctx.fillText('AUTHORIZED SIGNATURE', 1070, 750);
-        
-        // Date of Issue
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#64748B';
-        ctx.font = '600 11px "Outfit", sans-serif';
-        const issueDate = details.created_at ? new Date(details.created_at).toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'}) : new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
-        ctx.fillText(`AGREEMENT ISSUED ON: ${issueDate}`, 600, 790);
-        
-        // Download anchor trigger
-        const dataUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = `Tristar_Membership_Agreement_${details.membership_id}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
     // Helper to extract parameters from card attributes
     function downloadAgreementFromCard(event, bookingId, dateRange, timeSlot, duration, amount, courtName, createdAt) {
         if (event) event.preventDefault();
@@ -401,7 +213,7 @@
             membership_id: membershipId
         };
         
-        downloadAgreementImage(details);
+        window.downloadAgreementImage(details);
     }
 
     let activeCancelBookingId = null;
@@ -611,6 +423,7 @@
                             <div class="card-footer-row" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                                 <span class="created-at-text">Booked on: ${new Date(b.created_at).toLocaleDateString()}</span>
                                 <div style="display: flex; gap: 8px; align-items: center;">
+                                    ${b.status === 'cancelled' && b.cancelled_at ? `<span class="cancelled-at-text" style="color: var(--color-error); font-size: 11px; font-weight: 600;"><i class="fa-solid fa-calendar-xmark"></i> Cancelled on: ${b.cancelled_at}</span>` : ''}
                                     ${downloadButton}
                                     ${actionButton}
                                 </div>

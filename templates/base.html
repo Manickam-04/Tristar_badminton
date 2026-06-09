@@ -114,6 +114,57 @@
     <!-- Active Toast Alert System Container -->
     <div class="toast-container" id="toast-root"></div>
 
+    <!-- UPI PAYMENT MODAL -->
+    <div class="modal-overlay hidden" id="modal-upi-payment" style="z-index: 10001;">
+        <div class="modal-card glass-card slide-up" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-qrcode text-accent"></i> UPI Payment</h3>
+                <button class="modal-close-btn" id="btn-close-upi-payment">&times;</button>
+            </div>
+            
+            <div class="modal-body" style="text-align: center; display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin: 0; text-transform: lowercase;">
+                    download the qr and make the payment throught your upi app and then check your bookings
+                </p>
+                
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 280px; box-sizing: border-box;">
+                    <img id="upi-payment-qr-img" src="" alt="UPI QR Code" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: block;" />
+                    <span id="upi-payment-amount-label" class="text-accent" style="font-size: 20px; font-weight: 800; margin-top: 10px; font-family: 'Outfit', sans-serif;">₹0.00</span>
+                </div>
+                
+                <!-- Countdown or progress indicator -->
+                <div id="upi-download-status" style="font-size: 14px; font-weight: 600; color: var(--color-accent); min-height: 20px;"></div>
+            </div>
+
+            <div class="modal-footer" style="justify-content: center; width: 100%;">
+                <button class="btn-modal-cancel" id="btn-cancel-upi-payment" style="flex: 1;">Close</button>
+                <button class="btn-modal-confirm" id="btn-download-upi-qr" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-download"></i> Download QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT CONFIRMATION MODAL -->
+    <div class="modal-overlay hidden" id="modal-payment-confirm-prompt" style="z-index: 10005;">
+        <div class="modal-card glass-card slide-up" style="max-width: 400px; padding: 20px; text-align: center; border: 2px solid var(--border-color); box-sizing: border-box;">
+            <h3 style="margin-top: 0; font-size: 18px; color: var(--text-primary); display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Outfit', sans-serif;">
+                <i class="fa-solid fa-circle-question text-accent"></i> Payment Confirmation
+            </h3>
+            <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin: 15px 0; font-family: 'Plus Jakarta Sans', sans-serif;">
+                Did you complete the payment through your UPI app?
+            </p>
+            <div style="display: flex; gap: 12px; margin-top: 20px; width: 100%;">
+                <button id="btn-payment-confirm-no" class="btn-modal-confirm btn-danger" style="flex: 1; justify-content: center; font-family: 'Outfit', sans-serif;">
+                    <i class="fa-solid fa-xmark"></i> No
+                </button>
+                <button id="btn-payment-confirm-yes" class="btn-modal-confirm" style="flex: 1; justify-content: center; background: #10B981; color: #061912; font-family: 'Outfit', sans-serif;">
+                    <i class="fa-solid fa-check"></i> Yes
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Background In-App Alerts Banner -->
     {% if user %}
     <div id="live-notification-banner" class="notification-banner hidden">
@@ -188,7 +239,7 @@
         });
 
         // Global Toast Notification Helper
-        window.showToast = function(message, type = 'success') {
+        window.showToast = function(message, type = 'success', actionCallback = null, actionText = '') {
             const container = document.getElementById('toast-root');
             if (!container) return;
 
@@ -200,37 +251,610 @@
             if (type === 'warning') iconClass = 'fa-exclamation-circle';
             if (type === 'info') iconClass = 'fa-info-circle';
 
+            let actionHtml = '';
+            if (actionCallback && actionText) {
+                actionHtml = `<button class="btn-toast-action" style="margin-top: 10px; padding: 8px 16px; font-family: 'Outfit', sans-serif; font-weight: 700; background: var(--color-accent); color: #061912; border: none; border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px;"><i class="fa-solid fa-file-arrow-down"></i> ${actionText}</button>`;
+            }
+
             toast.innerHTML = `
                 <i class="fa-solid ${iconClass} toast-icon"></i>
                 <span class="toast-msg">${message}</span>
+                ${actionHtml}
             `;
 
             container.appendChild(toast);
+
+            if (actionCallback && actionText) {
+                const actBtn = toast.querySelector('.btn-toast-action');
+                if (actBtn) {
+                    actBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        actionCallback();
+                    });
+                }
+            }
 
             // Animate In and then fade out
             setTimeout(() => {
                 toast.classList.add('show');
             }, 10);
 
+            const displayDuration = actionCallback ? 5000 : 2500;
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => {
                     toast.remove();
                 }, 300);
-            }, 4000);
+            }, displayDuration);
+        };
+
+        // Global Canvas Agreement Downloader
+        window.downloadAgreementImage = function(details) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1200;
+            canvas.height = 850;
+            const ctx = canvas.getContext('2d');
+            
+            // Background Gradient
+            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grad.addColorStop(0, '#0a1128');
+            grad.addColorStop(0.5, '#102a43');
+            grad.addColorStop(1, '#072236');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Inner Glassmorphism Panel
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 20);
+            } else {
+                ctx.rect(40, 40, canvas.width - 80, canvas.height - 80);
+            }
+            ctx.fill();
+            
+            // Emerald Border
+            ctx.strokeStyle = '#10B981';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(45, 45, canvas.width - 90, canvas.height - 90, 18);
+            } else {
+                ctx.rect(45, 45, canvas.width - 90, canvas.height - 90);
+            }
+            ctx.stroke();
+            
+            // Gold Border
+            ctx.strokeStyle = '#FBBF24';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(55, 55, canvas.width - 110, canvas.height - 110, 15);
+            } else {
+                ctx.rect(55, 55, canvas.width - 110, canvas.height - 110);
+            }
+            ctx.stroke();
+            
+            // Shield Decoration
+            ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#10B981';
+            ctx.beginPath();
+            ctx.moveTo(600, 90);
+            ctx.lineTo(630, 120);
+            ctx.lineTo(600, 150);
+            ctx.lineTo(570, 120);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Gold Star Inside Shield
+            ctx.fillStyle = '#FBBF24';
+            ctx.beginPath();
+            ctx.moveTo(600, 105);
+            ctx.lineTo(610, 120);
+            ctx.lineTo(600, 135);
+            ctx.lineTo(590, 120);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+            
+            // Header Text
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '800 32px "Outfit", sans-serif';
+            ctx.fillText('TRISTAR BADMINTON ACADEMY', 600, 205);
+            
+            ctx.fillStyle = '#10B981';
+            ctx.font = '600 16px "Outfit", sans-serif';
+            ctx.fillText('OFFICIAL MEMBERSHIP SUBSCRIPTION AGREEMENT', 600, 235);
+            
+            // Divider line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(200, 260);
+            ctx.lineTo(1000, 260);
+            ctx.stroke();
+            
+            // Description
+            ctx.fillStyle = '#E2E8F0';
+            ctx.font = 'italic 15px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('This agreement certifies that the slot reservation is locked and confirmed for the period listed below.', 600, 295);
+            
+            // Detail drawer helper
+            function drawDetailItem(x, y, label, value, valColor = '#FFFFFF') {
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#94A3B8';
+                ctx.font = '600 13px "Outfit", sans-serif';
+                ctx.fillText(label.toUpperCase(), x, y);
+                
+                ctx.fillStyle = valColor;
+                ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+                ctx.fillText(value, x, y + 25);
+            }
+            
+            // Left Column (Member Info)
+            let currentY = 360;
+            const startXLeft = 130;
+            drawDetailItem(startXLeft, currentY, 'Member Name', details.name || 'Anonymous User');
+            currentY += 65;
+            drawDetailItem(startXLeft, currentY, 'Registered Email', details.email || '—');
+            currentY += 65;
+            drawDetailItem(startXLeft, currentY, 'Mobile Number', details.mobile || '—');
+            currentY += 65;
+            drawDetailItem(startXLeft, currentY, 'Agreement ID', `TBA-MEM-${details.membership_id.toString().padStart(5, '0')}`, '#FBBF24');
+            
+            // Right Column (Subscription Info)
+            currentY = 360;
+            const startXRight = 630;
+            drawDetailItem(startXRight, currentY, 'Reserved Court Name', details.court_name);
+            currentY += 65;
+            drawDetailItem(startXRight, currentY, 'Daily Time Slot', details.time_range);
+            currentY += 65;
+            drawDetailItem(startXRight, currentY, 'Validity Period', `${details.start_date} to ${details.end_date}`, '#10B981');
+            currentY += 65;
+            drawDetailItem(startXRight, currentY, 'Duration & Amount Paid', `${details.duration} Plan  |  ₹${parseFloat(details.amount).toLocaleString('en-IN')}.00 (FULLY PAID)`, '#34D399');
+            
+            // Divider
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.moveTo(130, 640);
+            ctx.lineTo(1070, 640);
+            ctx.stroke();
+            
+            // Circular Seal
+            ctx.shadowColor = 'rgba(251, 191, 36, 0.3)';
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = '#FBBF24';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(220, 725, 45, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#FBBF24';
+            ctx.font = 'bold 10px "Outfit", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('TRISTAR', 220, 715);
+            ctx.font = '800 11px "Outfit", sans-serif';
+            ctx.fillText('APPROVED', 220, 730);
+            ctx.font = 'bold 9px "Outfit", sans-serif';
+            ctx.fillText('SEAL', 220, 743);
+            ctx.shadowBlur = 0;
+            
+            // Signatures
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#E2E8F0';
+            ctx.font = 'italic 16px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('Tristar Academy Executive Board', 1070, 715);
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(850, 730);
+            ctx.lineTo(1070, 730);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 11px "Outfit", sans-serif';
+            ctx.fillText('AUTHORIZED SIGNATURE', 1070, 750);
+            
+            // Date of Issue
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#64748B';
+            ctx.font = '600 11px "Outfit", sans-serif';
+            const issueDate = details.created_at ? new Date(details.created_at.replace ? details.created_at.replace(' ', 'T') : details.created_at).toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'}) : new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
+            ctx.fillText(`AGREEMENT ISSUED ON: ${issueDate}`, 600, 790);
+            
+            // Mobile browser download compatibility bridge
+            const dataUrl = canvas.toDataURL('image/png');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                // Create custom preview modal overlay dynamically
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100vw';
+                overlay.style.height = '100vh';
+                overlay.style.backgroundColor = 'rgba(11, 15, 25, 0.95)';
+                overlay.style.backdropFilter = 'blur(10px)';
+                overlay.style.webkitBackdropFilter = 'blur(10px)';
+                overlay.style.zIndex = '999999';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.padding = '20px';
+                overlay.style.boxSizing = 'border-box';
+                
+                overlay.innerHTML = `
+                    <div style="width:100%; max-width:440px; background:rgba(30, 41, 59, 0.7); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:15px; color:#fff; font-family:'Outfit', sans-serif; box-shadow:0 30px 60px rgba(0,0,0,0.6); box-sizing:border-box; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+                            <span style="font-weight:700; font-size:16px; color:#10B981; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-file-invoice"></i> Agreement Ready</span>
+                            <button class="close-overlay-btn" style="background:none; border:none; color:#94A3B8; font-size:26px; cursor:pointer; line-height:1; padding:0 5px;">&times;</button>
+                        </div>
+                        <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5; text-align:center;">Press and hold (long-press) the image below to save it directly to your Photos or Gallery.</p>
+                        <img src="${dataUrl}" alt="Membership Agreement" style="width:100%; border-radius:8px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 15px 30px rgba(0,0,0,0.5); -webkit-touch-callout:default; pointer-events:auto;" />
+                        <button class="close-overlay-btn-bottom" style="padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Add event listeners to close the overlay preview
+                const closeBtn = overlay.querySelector('.close-overlay-btn');
+                const closeBtnBottom = overlay.querySelector('.close-overlay-btn-bottom');
+                
+                const removeOverlay = () => {
+                    overlay.remove();
+                };
+                
+                closeBtn.addEventListener('click', removeOverlay);
+                closeBtnBottom.addEventListener('click', removeOverlay);
+            } else {
+                // Desktop browser: standard programmatic download anchor
+                const link = document.createElement('a');
+                link.download = `Tristar_Membership_Agreement_${details.membership_id}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        function handleBeforeUnload(e) {
+            e.preventDefault();
+            e.returnValue = 'You have a pending payment. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+
+        window.showUPIPaymentModal = function(amount, redirectUrl, bookingId, restoredState = null, restoredSecondsLeft = null) {
+            const modal = document.getElementById('modal-upi-payment');
+            const qrImg = document.getElementById('upi-payment-qr-img');
+            const amountLabel = document.getElementById('upi-payment-amount-label');
+            const statusLabel = document.getElementById('upi-download-status');
+            const downloadBtn = document.getElementById('btn-download-upi-qr');
+            const closeBtn = document.getElementById('btn-cancel-upi-payment');
+            const closeIconBtn = document.getElementById('btn-close-upi-payment');
+
+            if (!modal || !qrImg || !amountLabel) return;
+
+            // Enable navigation prevention
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.addEventListener('beforeunload', handleBeforeUnload);
+
+            const saveState = (state, seconds) => {
+                sessionStorage.setItem('active_payment_modal', JSON.stringify({
+                    amount: amount,
+                    redirectUrl: redirectUrl,
+                    bookingId: bookingId,
+                    state: state,
+                    secondsLeft: seconds
+                }));
+            };
+
+            const clearState = () => {
+                sessionStorage.removeItem('active_payment_modal');
+                window.removeEventListener('beforeunload', handleBeforeUnload);
+            };
+
+            const cancelBooking = () => {
+                if (!bookingId) return Promise.resolve();
+                return fetch('/api/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: bookingId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        console.error("Cancellation failed:", data.message);
+                    }
+                })
+                .catch(err => console.error("Error cancelling:", err));
+            };
+
+            const showConfirmPrompt = () => {
+                saveState('prompting', 0);
+                const promptOverlay = document.getElementById('modal-payment-confirm-prompt');
+                const yesBtn = document.getElementById('btn-payment-confirm-yes');
+                const noBtn = document.getElementById('btn-payment-confirm-no');
+                
+                if (!promptOverlay || !yesBtn || !noBtn) return;
+                
+                promptOverlay.classList.remove('hidden');
+                
+                yesBtn.onclick = () => {
+                    clearState();
+                    promptOverlay.classList.add('hidden');
+                    modal.classList.add('hidden');
+                    window.location.href = redirectUrl;
+                };
+                
+                noBtn.onclick = () => {
+                    clearState();
+                    promptOverlay.classList.add('hidden');
+                    modal.classList.add('hidden');
+                    
+                    // Cancel booking, clear sessionStorage and show error toast
+                    cancelBooking().then(() => {
+                        sessionStorage.removeItem('booking_success_msg');
+                        sessionStorage.removeItem('pending_membership_agreement');
+                        
+                        const isMembership = bookingId >= 1000000;
+                        const msg = isMembership ? "Payment failed. Membership was not booked." : "Payment failed. Slot was not booked.";
+                        window.showToast(msg, 'error');
+                        
+                        if (typeof loadLiveSlots === 'function') {
+                            loadLiveSlots();
+                        }
+                    });
+                };
+            };
+
+            // Determine matching QR image
+            const allowedAmounts = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 750, 1200];
+            let matchedAmount = 300; // default fallback
+            const amtInt = Math.round(amount);
+            if (allowedAmounts.includes(amtInt)) {
+                matchedAmount = amtInt;
+            } else {
+                let closest = allowedAmounts[0];
+                let minDiff = Math.abs(amtInt - closest);
+                for (let i = 1; i < allowedAmounts.length; i++) {
+                    let diff = Math.abs(amtInt - allowedAmounts[i]);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = allowedAmounts[i];
+                    }
+                }
+                matchedAmount = closest;
+            }
+
+            const qrImageUrl = `/static/upi_qr/labeled-upipe-${matchedAmount}rps.png`;
+            qrImg.src = qrImageUrl;
+            amountLabel.innerText = `₹${parseFloat(amount).toLocaleString('en-IN')}.00`;
+            statusLabel.innerText = "";
+            
+            // Reset buttons state
+            downloadBtn.disabled = false;
+            downloadBtn.style.opacity = "1";
+            closeBtn.disabled = false;
+            closeBtn.style.opacity = "1";
+            if (closeIconBtn) closeIconBtn.style.display = 'block';
+
+            // Show Modal
+            modal.classList.remove('hidden');
+
+            let countdownInterval = null;
+
+            const startCountdown = (startSecs) => {
+                // Disable download button and close buttons
+                downloadBtn.disabled = true;
+                downloadBtn.style.opacity = "0.6";
+                closeBtn.disabled = true;
+                closeBtn.style.opacity = "0.6";
+                if (closeIconBtn) closeIconBtn.style.display = 'none';
+
+                let secondsLeft = startSecs;
+                statusLabel.innerText = `Verifying payment in ${secondsLeft}s...`;
+                saveState('downloaded', secondsLeft);
+                
+                countdownInterval = setInterval(() => {
+                    secondsLeft--;
+                    if (secondsLeft > 0) {
+                        statusLabel.innerText = `Verifying payment in ${secondsLeft}s...`;
+                        saveState('downloaded', secondsLeft);
+                        const mobileCountdown = document.querySelector('#mobile-qr-overlay .mobile-qr-countdown');
+                        if (mobileCountdown) {
+                            mobileCountdown.innerText = `Verifying payment in ${secondsLeft}s...`;
+                        }
+                    } else {
+                        clearInterval(countdownInterval);
+                        statusLabel.innerText = "Verifying...";
+                        
+                        const mobileCountdown = document.querySelector('#mobile-qr-overlay .mobile-qr-countdown');
+                        if (mobileCountdown) {
+                            mobileCountdown.innerText = "Verifying...";
+                        }
+                        
+                        // Close any mobile overlay
+                        const ov = document.getElementById('mobile-qr-overlay');
+                        if (ov) ov.remove();
+                        
+                        showConfirmPrompt();
+                    }
+                }, 1000);
+            };
+
+            // Setup download click handler
+            const handleDownload = () => {
+                // Determine if mobile
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (isMobile) {
+                    // Mobile long-press preview overlay
+                    const mobileOverlay = document.createElement('div');
+                    mobileOverlay.id = 'mobile-qr-overlay';
+                    mobileOverlay.style.position = 'fixed';
+                    mobileOverlay.style.top = '0';
+                    mobileOverlay.style.left = '0';
+                    mobileOverlay.style.width = '100vw';
+                    mobileOverlay.style.height = '100vh';
+                    mobileOverlay.style.backgroundColor = 'rgba(11, 15, 25, 0.96)';
+                    mobileOverlay.style.backdropFilter = 'blur(10px)';
+                    mobileOverlay.style.webkitBackdropFilter = 'blur(10px)';
+                    mobileOverlay.style.zIndex = '10002';
+                    mobileOverlay.style.display = 'flex';
+                    mobileOverlay.style.flexDirection = 'column';
+                    mobileOverlay.style.alignItems = 'center';
+                    mobileOverlay.style.justifyContent = 'center';
+                    mobileOverlay.style.padding = '20px';
+                    mobileOverlay.style.boxSizing = 'border-box';
+
+                    mobileOverlay.innerHTML = `
+                        <div style="width:100%; max-width:440px; background:rgba(30, 41, 59, 0.9); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:15px; color:#fff; font-family:'Outfit', sans-serif; box-shadow:0 30px 60px rgba(0,0,0,0.6); box-sizing:border-box; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-align: center;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+                                <span style="font-weight:700; font-size:16px; color:#10B981; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-qrcode"></i> Payment QR Code</span>
+                                <button class="close-qr-overlay-btn" style="background:none; border:none; color:#94A3B8; font-size:26px; cursor:pointer; line-height:1; padding:0 5px;">&times;</button>
+                            </div>
+                            <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5;">Press and hold (long-press) the QR code below to save it to your Photos/Gallery, make the payment, and check your bookings.</p>
+                            <img src="${qrImageUrl}" alt="UPI QR Code" style="width:80%; max-width:260px; margin: 0 auto; border-radius:8px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 15px 30px rgba(0,0,0,0.5); -webkit-touch-callout:default; pointer-events:auto;" />
+                            <div class="mobile-qr-countdown" style="font-size:14px; font-weight:700; color:#10B981; margin-top:5px; margin-bottom:5px;">Verifying payment in 10s...</div>
+                            <button class="close-qr-overlay-btn-bottom" style="padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
+                        </div>
+                    `;
+                    document.body.appendChild(mobileOverlay);
+
+                    const removeOverlay = () => {
+                        if (countdownInterval) {
+                            clearInterval(countdownInterval);
+                        }
+                        mobileOverlay.remove();
+                        showConfirmPrompt();
+                    };
+                    mobileOverlay.querySelector('.close-qr-overlay-btn').addEventListener('click', removeOverlay);
+                    mobileOverlay.querySelector('.close-qr-overlay-btn-bottom').addEventListener('click', removeOverlay);
+                } else {
+                    // Desktop programmatic download
+                    const link = document.createElement('a');
+                    link.download = `Tristar_Payment_QR_${matchedAmount}.png`;
+                    link.href = qrImageUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+
+                startCountdown(10);
+            };
+
+            // Handle recovery restoration states
+            if (restoredState === 'opened') {
+                saveState('opened', 10);
+            } else if (restoredState === 'downloaded') {
+                const secs = restoredSecondsLeft !== null ? restoredSecondsLeft : 10;
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (isMobile) {
+                    handleDownload();
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                    }
+                    startCountdown(secs);
+                } else {
+                    startCountdown(secs);
+                }
+            } else if (restoredState === 'prompting') {
+                showConfirmPrompt();
+            } else {
+                saveState('opened', 10);
+            }
+
+            // Set up button listeners
+            downloadBtn.onclick = handleDownload;
+
+            const handleClose = () => {
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+                clearState();
+                modal.classList.add('hidden');
+                
+                cancelBooking().then(() => {
+                    sessionStorage.removeItem('booking_success_msg');
+                    sessionStorage.removeItem('pending_membership_agreement');
+                    
+                    const isMembership = bookingId >= 1000000;
+                    const msg = isMembership ? "Membership not booked." : "Slot not booked.";
+                    window.showToast(msg, 'warning');
+                    
+                    if (typeof loadLiveSlots === 'function') {
+                        loadLiveSlots();
+                    }
+                });
+            };
+
+            closeBtn.onclick = handleClose;
+            if (closeIconBtn) {
+                closeIconBtn.onclick = handleClose;
+            }
         };
 
         // Check for pending success messages (e.g. after returning back from payment gateway)
         function checkPendingBookingMessage() {
             const pendingMsg = sessionStorage.getItem('booking_success_msg');
             if (pendingMsg) {
-                window.showToast(pendingMsg, 'success');
+                const agreementDetailsStr = sessionStorage.getItem('pending_membership_agreement');
+                if (agreementDetailsStr) {
+                    try {
+                        const details = JSON.parse(agreementDetailsStr);
+                        window.showToast(pendingMsg, 'success', () => {
+                            window.downloadAgreementImage(details);
+                        }, 'Download Agreement');
+                    } catch (e) {
+                        window.showToast(pendingMsg, 'success');
+                    }
+                    sessionStorage.removeItem('pending_membership_agreement');
+                } else {
+                    window.showToast(pendingMsg, 'success');
+                }
                 sessionStorage.removeItem('booking_success_msg');
+            }
+        }
+
+        function restoreActivePaymentModal() {
+            const savedDataStr = sessionStorage.getItem('active_payment_modal');
+            if (savedDataStr) {
+                try {
+                    const data = JSON.parse(savedDataStr);
+                    if (data && data.amount) {
+                        window.showUPIPaymentModal(data.amount, data.redirectUrl, data.bookingId, data.state, data.secondsLeft);
+                    }
+                } catch (e) {
+                    console.error("Error restoring payment modal:", e);
+                }
+            }
+        }
+
+        function checkPendingToast() {
+            const pendingToast = sessionStorage.getItem('pending_toast');
+            if (pendingToast) {
+                try {
+                    const toastData = JSON.parse(pendingToast);
+                    if (toastData && toastData.message) {
+                        window.showToast(toastData.message, toastData.type || 'success');
+                    }
+                } catch (e) {
+                    console.error("Error parsing pending toast:", e);
+                }
+                sessionStorage.removeItem('pending_toast');
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             checkPendingBookingMessage();
+            restoreActivePaymentModal();
+            checkPendingToast();
         });
 
         window.addEventListener('pageshow', (event) => {
