@@ -3,7 +3,10 @@ badminton.db
 badminton_backup.db
 backups/
 *.pre_restore_bak
+*.pre_migration_bak
+*.bak
 *.tmp
+
 
 # Ignore Python cache & temporary folders
 __pycache__/
