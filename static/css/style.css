@@ -786,56 +786,8 @@ select option {
     transform: translateY(-1px);
 }
 
-.auth-divider {
-    position: relative;
-    text-align: center;
-    margin: 5px 0;
-}
 
-.auth-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: var(--border-color);
-    z-index: 1;
-}
 
-.auth-divider span {
-    background: var(--bg-secondary);
-    position: relative;
-    z-index: 2;
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-}
-
-.btn-google-auth {
-    background: #FFFFFF;
-    color: #1e1e1e;
-    font-weight: 600;
-    padding: 12px 20px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-    font-size: 14px;
-    transition: var(--transition-fast);
-}
-
-.btn-google-auth:hover {
-    background: #F1F5F9;
-}
-
-.google-logo {
-    width: 18px;
-    height: 18px;
-}
 
 .credentials-helper {
     background: rgba(255, 255, 255, 0.02);

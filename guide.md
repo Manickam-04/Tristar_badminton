@@ -32,7 +32,7 @@ badminton_app/
     ├── base.html                  # Shell layout (responsive sidebar, toasts, & live notifications)
     ├── index.html                 # Academy Landing promotional page
     ├── booking.html               # Customer mobile-first slots picker grid
-    ├── login.html                 # Register, Login, & Mock Google single sign-on forms
+    ├── login.html                 # Register & Login forms
     ├── admin_login.html           # Separate secure Admin login card
     ├── admin.html                 # Admin operational dashboard panel
     └── profile.html               # Customer history panel & contract downloader

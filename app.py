@@ -232,46 +232,7 @@ def api_login():
     
     return jsonify({'success': True, 'message': 'Login successful!', 'role': user['role']})
 
-@app.route('/api/google-login-mock', methods=['POST'])
-def api_google_login_mock():
-    """Simulates Google OAuth single-sign-on without needing API keys."""
-    data = request.get_json() or {}
-    email = data.get('email', '').strip().lower()
-    name = data.get('name', '').strip()
-    
-    if not email or not name:
-        return jsonify({'success': False, 'message': 'Google user details missing.'}), 400
-        
-    conn = database.get_db_connection()
-    try:
-        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        if not user:
-            # Create a new user record with a randomized secure mock password hash
-            random_pw_hash = generate_password_hash(os.urandom(16).hex())
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, 'user')",
-                (email, random_pw_hash, name)
-            )
-            conn.commit()
-            user_id = cursor.lastrowid
-            role = 'user'
-        else:
-            user_id = user['id']
-            role = user['role']
-            
-        session['user_id'] = user_id
-        session['email'] = email
-        session['name'] = name
-        session['role'] = role
-        session.permanent = True
-        
-        return jsonify({'success': True, 'message': 'Google sign-in simulated successfully!', 'role': role})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
-    finally:
-        conn.close()
+
 
 @app.route('/api/forgot-password', methods=['POST'])
 def api_forgot_password():
