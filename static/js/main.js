@@ -280,10 +280,9 @@ function processBookingSubmit() {
         closeBookingModal('confirm');
 
         if (data.success) {
-            sessionStorage.setItem('booking_success_msg', data.message);
             const amount = (data.booking && data.booking.total_price) ? data.booking.total_price : 0;
             const bookingId = (data.booking && data.booking.id) ? data.booking.id : null;
-            window.showUPIPaymentModal(amount, '/profile', bookingId);
+            window.showUPIPaymentModal(amount, '/profile', bookingId, null, null, data.message);
         } else {
             window.showToast(data.message, 'error');
         }

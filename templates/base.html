@@ -278,7 +278,7 @@
             // Animate In and then fade out
             setTimeout(() => {
                 toast.classList.add('show');
-            }, 10);
+            }, 100);
 
             const displayDuration = actionCallback ? 5000 : 2500;
             setTimeout(() => {
@@ -531,7 +531,7 @@
             return e.returnValue;
         }
 
-        window.showUPIPaymentModal = function(amount, redirectUrl, bookingId, restoredState = null, restoredSecondsLeft = null) {
+        window.showUPIPaymentModal = function(amount, redirectUrl, bookingId, restoredState = null, restoredSecondsLeft = null, successMessage = null, agreementDetails = null) {
             const modal = document.getElementById('modal-upi-payment');
             const qrImg = document.getElementById('upi-payment-qr-img');
             const amountLabel = document.getElementById('upi-payment-amount-label');
@@ -541,6 +541,11 @@
             const closeIconBtn = document.getElementById('btn-close-upi-payment');
 
             if (!modal || !qrImg || !amountLabel) return;
+
+            // Prevent double-initialization of the payment modal
+            if (modal && !modal.classList.contains('hidden') && !restoredState) return;
+            if (modal && !modal.classList.contains('hidden') && restoredState && window.paymentModalInitialized) return;
+            window.paymentModalInitialized = true;
 
             // Enable navigation prevention
             window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -552,7 +557,9 @@
                     redirectUrl: redirectUrl,
                     bookingId: bookingId,
                     state: state,
-                    secondsLeft: seconds
+                    secondsLeft: seconds,
+                    successMessage: successMessage,
+                    agreementDetails: agreementDetails
                 }));
             };
 
@@ -589,6 +596,11 @@
                 
                 yesBtn.onclick = () => {
                     clearState();
+                    // Set success flags only at the moment of redirect to avoid pre-redirect refresh cleanup
+                    sessionStorage.setItem('booking_success_msg', successMessage || 'Booking confirmed!');
+                    if (agreementDetails) {
+                        sessionStorage.setItem('pending_membership_agreement', typeof agreementDetails === 'string' ? agreementDetails : JSON.stringify(agreementDetails));
+                    }
                     promptOverlay.classList.add('hidden');
                     modal.classList.add('hidden');
                     window.location.href = redirectUrl;
@@ -668,22 +680,9 @@
                     if (secondsLeft > 0) {
                         statusLabel.innerText = `Verifying payment in ${secondsLeft}s...`;
                         saveState('downloaded', secondsLeft);
-                        const mobileCountdown = document.querySelector('#mobile-qr-overlay .mobile-qr-countdown');
-                        if (mobileCountdown) {
-                            mobileCountdown.innerText = `Verifying payment in ${secondsLeft}s...`;
-                        }
                     } else {
                         clearInterval(countdownInterval);
                         statusLabel.innerText = "Verifying...";
-                        
-                        const mobileCountdown = document.querySelector('#mobile-qr-overlay .mobile-qr-countdown');
-                        if (mobileCountdown) {
-                            mobileCountdown.innerText = "Verifying...";
-                        }
-                        
-                        // Close any mobile overlay
-                        const ov = document.getElementById('mobile-qr-overlay');
-                        if (ov) ov.remove();
                         
                         showConfirmPrompt();
                     }
@@ -692,60 +691,31 @@
 
             // Setup download click handler
             const handleDownload = () => {
-                // Determine if mobile
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                if (isMobile) {
-                    // Mobile long-press preview overlay
-                    const mobileOverlay = document.createElement('div');
-                    mobileOverlay.id = 'mobile-qr-overlay';
-                    mobileOverlay.style.position = 'fixed';
-                    mobileOverlay.style.top = '0';
-                    mobileOverlay.style.left = '0';
-                    mobileOverlay.style.width = '100vw';
-                    mobileOverlay.style.height = '100vh';
-                    mobileOverlay.style.backgroundColor = 'rgba(11, 15, 25, 0.96)';
-                    mobileOverlay.style.backdropFilter = 'blur(10px)';
-                    mobileOverlay.style.webkitBackdropFilter = 'blur(10px)';
-                    mobileOverlay.style.zIndex = '10002';
-                    mobileOverlay.style.display = 'flex';
-                    mobileOverlay.style.flexDirection = 'column';
-                    mobileOverlay.style.alignItems = 'center';
-                    mobileOverlay.style.justifyContent = 'center';
-                    mobileOverlay.style.padding = '20px';
-                    mobileOverlay.style.boxSizing = 'border-box';
-
-                    mobileOverlay.innerHTML = `
-                        <div style="width:100%; max-width:440px; background:rgba(30, 41, 59, 0.9); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:15px; color:#fff; font-family:'Outfit', sans-serif; box-shadow:0 30px 60px rgba(0,0,0,0.6); box-sizing:border-box; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-align: center;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
-                                <span style="font-weight:700; font-size:16px; color:#10B981; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-qrcode"></i> Payment QR Code</span>
-                                <button class="close-qr-overlay-btn" style="background:none; border:none; color:#94A3B8; font-size:26px; cursor:pointer; line-height:1; padding:0 5px;">&times;</button>
-                            </div>
-                            <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5;">Press and hold (long-press) the QR code below to save it to your Photos/Gallery, make the payment, and check your bookings.</p>
-                            <img src="${qrImageUrl}" alt="UPI QR Code" style="width:80%; max-width:260px; margin: 0 auto; border-radius:8px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 15px 30px rgba(0,0,0,0.5); -webkit-touch-callout:default; pointer-events:auto;" />
-                            <div class="mobile-qr-countdown" style="font-size:14px; font-weight:700; color:#10B981; margin-top:5px; margin-bottom:5px;">Verifying payment in 10s...</div>
-                            <button class="close-qr-overlay-btn-bottom" style="padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
-                        </div>
-                    `;
-                    document.body.appendChild(mobileOverlay);
-
-                    const removeOverlay = () => {
-                        if (countdownInterval) {
-                            clearInterval(countdownInterval);
-                        }
-                        mobileOverlay.remove();
-                        showConfirmPrompt();
-                    };
-                    mobileOverlay.querySelector('.close-qr-overlay-btn').addEventListener('click', removeOverlay);
-                    mobileOverlay.querySelector('.close-qr-overlay-btn-bottom').addEventListener('click', removeOverlay);
-                } else {
-                    // Desktop programmatic download
-                    const link = document.createElement('a');
-                    link.download = `Tristar_Payment_QR_${matchedAmount}.png`;
-                    link.href = qrImageUrl;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
+                const filename = `Tristar_Payment_QR_${matchedAmount}.png`;
+                
+                // Use fetch to download as blob, ensuring modern mobile browsers trigger direct downloads
+                fetch(qrImageUrl)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        // Revoke the object URL after a short delay to allow the download to start
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                    })
+                    .catch(err => {
+                        // Fallback: standard anchor download/redirect
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = qrImageUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
 
                 startCountdown(10);
             };
@@ -755,16 +725,7 @@
                 saveState('opened', 10);
             } else if (restoredState === 'downloaded') {
                 const secs = restoredSecondsLeft !== null ? restoredSecondsLeft : 10;
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                if (isMobile) {
-                    handleDownload();
-                    if (countdownInterval) {
-                        clearInterval(countdownInterval);
-                    }
-                    startCountdown(secs);
-                } else {
-                    startCountdown(secs);
-                }
+                startCountdown(secs);
             } else if (restoredState === 'prompting') {
                 showConfirmPrompt();
             } else {
@@ -829,7 +790,7 @@
                 try {
                     const data = JSON.parse(savedDataStr);
                     if (data && data.amount) {
-                        window.showUPIPaymentModal(data.amount, data.redirectUrl, data.bookingId, data.state, data.secondsLeft);
+                        window.showUPIPaymentModal(data.amount, data.redirectUrl, data.bookingId, data.state, data.secondsLeft, data.successMessage, data.agreementDetails);
                     }
                 } catch (e) {
                     console.error("Error restoring payment modal:", e);
@@ -852,14 +813,18 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function checkAndRenderAllPendingNotifications() {
             checkPendingBookingMessage();
             restoreActivePaymentModal();
             checkPendingToast();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAndRenderAllPendingNotifications();
         });
 
         window.addEventListener('pageshow', (event) => {
-            checkPendingBookingMessage();
+            checkAndRenderAllPendingNotifications();
             
             // On mobile iOS/Android, force reload slots when page is restored from cache (bfcache)
             const isBackNavigation = event.persisted || 

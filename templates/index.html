@@ -583,8 +583,8 @@
             
             if (data.success) {
                 closeMembershipModal();
-                sessionStorage.setItem('booking_success_msg', 'Membership subscription booked successfully!');
                 
+                let details = null;
                 try {
                     const courtSelect = document.getElementById('membership-court-select');
                     const courtName = courtSelect.options[courtSelect.selectedIndex].text;
@@ -592,7 +592,7 @@
                     const slotText = slotSelect.options[slotSelect.selectedIndex].text;
                     const timeRange = slotText.split(' (')[0];
                     
-                    const details = {
+                    details = {
                         name: currentUser.name,
                         email: currentUser.email,
                         mobile: currentUser.mobile,
@@ -605,15 +605,14 @@
                         created_at: new Date().toISOString(),
                         membership_id: data.membership.id
                     };
-                    sessionStorage.setItem('pending_membership_agreement', JSON.stringify(details));
                 } catch (err) {
-                    console.error("Error saving agreement details:", err);
+                    console.error("Error generating agreement details:", err);
                 }
 
                 const amount = (data.membership && data.membership.amount) ? data.membership.amount : 0;
                 const membershipId = (data.membership && data.membership.id) ? data.membership.id : null;
                 const bookingId = membershipId ? membershipId + 1000000 : null;
-                window.showUPIPaymentModal(amount, '/profile', bookingId);
+                window.showUPIPaymentModal(amount, '/profile', bookingId, null, null, 'Membership subscription booked successfully!', details);
             } else {
                 window.showToast(data.message || "Failed to book membership.", 'error');
             }
