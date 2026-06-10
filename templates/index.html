@@ -75,6 +75,7 @@
             <p class="section-description">Lock down your preferred standart time slot daily for the entire subscription period and play consistently.</p>
         </div>
 
+
         <div class="membership-grid">
             <!-- 1 Month Card -->
             <div class="membership-card glass-card">
@@ -128,6 +129,7 @@
                 </div>
             </div>
         </div>
+
     </section>
 
     <!-- Marketing / Advert Core Features Grid -->
@@ -236,6 +238,12 @@
             
             <form id="form-book-membership" onsubmit="submitMembershipBooking(event)">
                 <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px; padding: 20px;">
+                    <div class="slots-refresh-notice-container" style="display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;">
+                        <div class="slots-refresh-notice" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto; padding: 6px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 20px; font-size: 11px; color: var(--text-secondary); font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; max-width: 100%; text-align: center; width: fit-content;">
+                            <i class="fa-solid fa-arrows-rotate text-accent"></i>
+                            <span>Refresh the page to get updated slots</span>
+                        </div>
+                    </div>
                     <!-- Court Selector -->
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="membership-court-select" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-table-tennis-paddle-ball text-accent"></i> Select Court</label>
@@ -276,6 +284,13 @@
                         <i class="fa-solid fa-circle-info" style="margin-top: 2px; color: var(--color-accent);"></i>
                         <span>Re-locks the daily slot for the chosen period. Overlapping dates will be validated before booking.</span>
                     </div>
+
+                    <div class="slots-refresh-notice-container" style="display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin-top: 5px;">
+                        <div class="slots-refresh-notice" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto; padding: 6px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 20px; font-size: 11px; color: var(--text-secondary); font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; max-width: 100%; text-align: center; width: fit-content;">
+                            <i class="fa-solid fa-arrows-rotate text-accent"></i>
+                            <span>Refresh the page to get updated slots</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
@@ -301,13 +316,15 @@
 
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Check for redirect action from membership login
+        // Check for redirect action from membership login or session storage refresh state
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('open_membership') === 'true') {
+        if (urlParams.get('open_membership') === 'true' || sessionStorage.getItem('membership_modal_open') === 'true') {
             openMembershipModal();
-            // Clear parameter from address bar
-            const newUrl = window.location.pathname + window.location.hash;
-            window.history.replaceState({}, document.title, newUrl);
+            // Clear parameter from address bar if present
+            if (urlParams.get('open_membership') === 'true') {
+                const newUrl = window.location.pathname + window.location.hash;
+                window.history.replaceState({}, document.title, newUrl);
+            }
         }
 
         const slides = document.querySelectorAll('.carousel-slide');
@@ -374,6 +391,7 @@
     function openMembershipModal() {
         const modal = document.getElementById('modal-book-membership');
         modal.classList.remove('hidden');
+        sessionStorage.setItem('membership_modal_open', 'true');
         
         // Set start date default to today (timezone aware)
         const dateInput = document.getElementById('membership-start-date');
@@ -392,6 +410,7 @@
 
     function closeMembershipModal() {
         document.getElementById('modal-book-membership').classList.add('hidden');
+        sessionStorage.removeItem('membership_modal_open');
     }
 
     function fetchMembershipCourts() {
@@ -614,7 +633,9 @@
                 const bookingId = membershipId ? membershipId + 1000000 : null;
                 window.showUPIPaymentModal(amount, '/profile', bookingId, null, null, 'Membership subscription booked successfully!', details);
             } else {
+                closeMembershipModal();
                 window.showToast(data.message || "Failed to book membership.", 'error');
+                loadMembershipSlots();
             }
         })
         .catch(err => {

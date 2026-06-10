@@ -277,14 +277,16 @@ function processBookingSubmit() {
     .then(data => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pay & Book Now';
-        closeBookingModal('confirm');
 
         if (data.success) {
+            closeBookingModal('confirm');
             const amount = (data.booking && data.booking.total_price) ? data.booking.total_price : 0;
             const bookingId = (data.booking && data.booking.id) ? data.booking.id : null;
             window.showUPIPaymentModal(amount, '/profile', bookingId, null, null, data.message);
         } else {
+            closeBookingModal('confirm');
             window.showToast(data.message, 'error');
+            loadLiveSlots();
         }
     })
     .catch(err => {

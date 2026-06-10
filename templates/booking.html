@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="booking-page-container">
-    
+
     <!-- Header info banner -->
     <div class="booking-info-card glass-card">
         <div class="info-card-text">
@@ -26,10 +26,11 @@
 
         <!-- Court Selector -->
         <div class="control-box glass-card">
-            <label for="booking-court-select"><i class="fa-solid fa-table-tennis-paddle-ball text-accent"></i> Select Court</label>
+            <label for="booking-court-select"><i class="fa-solid fa-table-tennis-paddle-ball text-accent"></i> Select
+                Court</label>
             <select id="booking-court-select" class="booking-input">
                 {% for court in courts %}
-                    <option value="{{ court.id }}">{{ court.name }}</option>
+                <option value="{{ court.id }}">{{ court.name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -44,13 +45,22 @@
         <div class="legend-item"><span class="legend-dot dot-expired"></span> Expired</div>
     </div>
 
+    <div class="slots-refresh-notice-container"
+        style="display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; padding: 0 10px;">
+        <div class="slots-refresh-notice"
+            style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 12px auto; padding: 6px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 20px; font-size: 11px; color: var(--text-secondary); font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; max-width: 100%; text-align: center; width: fit-content;">
+            <i class="fa-solid fa-arrows-rotate text-accent"></i>
+            <span>Refresh the page to get updated slots</span>
+        </div>
+    </div>
+
     <!-- Live Grid of Slots -->
     <section class="slots-display-section">
         <div class="slots-grid-header">
             <h3>Hourly Slots Grid</h3>
             <span class="active-date-label" id="current-selected-date-label">Today</span>
         </div>
-        
+
         <!-- Loading state -->
         <div id="slots-loading" class="slots-loading-spinner hidden">
             <i class="fa-solid fa-spinner fa-spin"></i> Loading live court availability...
@@ -62,6 +72,15 @@
         </div>
     </section>
 
+    <div class="slots-refresh-notice-container"
+        style="display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; padding: 0 10px;">
+        <div class="slots-refresh-notice"
+            style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 20px auto 10px auto; padding: 6px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 20px; font-size: 11px; color: var(--text-secondary); font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; max-width: 100%; text-align: center; width: fit-content;">
+            <i class="fa-solid fa-arrows-rotate text-accent"></i>
+            <span>Refresh the page to get updated slots</span>
+        </div>
+    </div>
+
     <!-- CONFIRM BOOKING MODAL -->
     <div class="modal-overlay hidden" id="modal-confirm-booking">
         <div class="modal-card glass-card slide-up">
@@ -69,7 +88,7 @@
                 <h3><i class="fa-solid fa-circle-check text-accent"></i> Confirm Court Booking</h3>
                 <button class="modal-close-btn" onclick="closeBookingModal('confirm')">&times;</button>
             </div>
-            
+
             <div class="modal-body">
                 <div class="booking-summary-list">
                     <div class="summary-item">
@@ -104,7 +123,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="cancellation-policy-hint">
                     <i class="fa-solid fa-circle-info"></i> After payment done, press back for slot confirmation.
                 </div>
@@ -126,10 +145,11 @@
                 <h3><i class="fa-solid fa-circle-exclamation text-error"></i> Cancel Booking</h3>
                 <button class="modal-close-btn" onclick="closeBookingModal('cancel')">&times;</button>
             </div>
-            
+
             <div class="modal-body">
-                <p>Are you sure you want to cancel this booking? The slot will immediately become available for other players.</p>
-                
+                <p>Are you sure you want to cancel this booking? The slot will immediately become available for other
+                    players.</p>
+
                 <div class="booking-summary-list cancel-summary">
                     <div class="summary-item">
                         <span class="label">Court:</span>

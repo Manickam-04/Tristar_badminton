@@ -1049,10 +1049,20 @@ select option {
 .modal-card {
     max-width: 420px;
     width: 100%;
+    max-height: min(650px, 90vh);
     border-radius: var(--radius-md);
     padding: 0;
     overflow: hidden;
     box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-card form {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
 }
 
 .slide-up {
@@ -1091,6 +1101,8 @@ select option {
 
 .modal-body {
     padding: 20px;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .booking-summary-list {
