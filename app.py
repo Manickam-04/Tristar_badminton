@@ -497,6 +497,9 @@ def api_book_slot():
     slot_id = data.get('slot_id')
     date_str = data.get('date', '').strip()
     num_members = int(data.get('num_members', 1))
+    payment_method = data.get('payment_method', 'online').strip().lower()
+    if payment_method not in ('online', 'offline'):
+        payment_method = 'online'
     
     if not court_id or not slot_id or not date_str:
         return jsonify({'success': False, 'message': 'Court ID, Slot ID, and Date are required.'}), 400
@@ -579,8 +582,8 @@ def api_book_slot():
         # 4. Insert booking
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO bookings (user_id, court_id, slot_id, booking_date, num_slots, num_members, total_price, status) VALUES (?, ?, ?, ?, 1, ?, ?, 'confirmed')",
-            (user['id'], court_id, slot_id, date_str, num_members, total_price)
+            "INSERT INTO bookings (user_id, court_id, slot_id, booking_date, num_slots, num_members, total_price, status, payment_method) VALUES (?, ?, ?, ?, 1, ?, ?, 'confirmed', ?)",
+            (user['id'], court_id, slot_id, date_str, num_members, total_price, payment_method)
         )
         
         # Commit will unlock database
@@ -595,11 +598,49 @@ def api_book_slot():
                 'court_id': court_id,
                 'slot_id': slot_id,
                 'date': date_str,
-                'total_price': total_price
+                'total_price': total_price,
+                'payment_method': payment_method
             }
         })
     except Exception as e:
         conn.rollback()
+        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/book/update-method', methods=['POST'])
+def api_update_booking_payment_method():
+    authorized, user = login_required()
+    if not authorized:
+        return jsonify({'success': False, 'message': user}), 401
+        
+    data = request.get_json() or {}
+    booking_id = data.get('booking_id')
+    payment_method = data.get('payment_method', 'online').strip().lower()
+    
+    if payment_method not in ('online', 'offline'):
+        payment_method = 'online'
+        
+    if not booking_id:
+        return jsonify({'success': False, 'message': 'Booking ID is required.'}), 400
+        
+    conn = database.get_db_connection()
+    try:
+        # Check if booking exists and belongs to the user or is admin
+        booking = conn.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
+        if not booking:
+            return jsonify({'success': False, 'message': 'Booking not found.'}), 404
+            
+        if booking['user_id'] != user['id'] and user['role'] != 'admin':
+            return jsonify({'success': False, 'message': 'Unauthorized.'}), 403
+            
+        conn.execute(
+            "UPDATE bookings SET payment_method = ? WHERE id = ?",
+            (payment_method, booking_id)
+        )
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Payment method updated successfully.'})
+    except Exception as e:
         return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
     finally:
         conn.close()
@@ -964,7 +1005,7 @@ def api_bookings_history():
         # Fetch user's bookings joined with court details and slot details
         bookings = conn.execute(
             """
-            SELECT b.id as booking_id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at, b.cancelled_at,
+            SELECT b.id as booking_id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at, b.cancelled_at, b.payment_method,
                    c.name as court_name, s.start_time, s.end_time
             FROM bookings b
             JOIN courts c ON b.court_id = c.id
@@ -1000,7 +1041,8 @@ def api_bookings_history():
                 'court_name': b['court_name'],
                 'time': f"{b['start_time']} - {b['end_time']}",
                 'type': 'hourly',
-                'duration': ''
+                'duration': '',
+                'payment_method': b['payment_method'] or 'online'
             })
             
         for m in memberships:
@@ -1015,7 +1057,8 @@ def api_bookings_history():
                 'court_name': m['court_name'],
                 'time': f"{m['start_time']} - {m['end_time']}",
                 'type': 'membership',
-                'duration': m['duration']
+                'duration': m['duration'],
+                'payment_method': 'online'
             })
             
         history.sort(key=lambda x: x['created_at'], reverse=True)
@@ -1326,7 +1369,7 @@ def admin_api_bookings():
         # Fetch all active bookings in chronological order
         bookings = conn.execute(
             """
-            SELECT b.id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at, b.cancelled_at,
+            SELECT b.id, b.booking_date, b.num_members, b.total_price, b.status, b.created_at, b.cancelled_at, b.payment_method,
                    c.name as court_name, s.start_time, s.end_time, u.name as user_name, u.email as user_email, u.mobile as user_mobile
             FROM bookings b
             JOIN courts c ON b.court_id = c.id
@@ -1364,7 +1407,8 @@ def admin_api_bookings():
                 'time_range': f"{b['start_time']} - {b['end_time']}",
                 'user_name': b['user_name'],
                 'user_email': b['user_email'],
-                'user_mobile': b['user_mobile']
+                'user_mobile': b['user_mobile'],
+                'payment_method': b['payment_method'] or 'online'
             })
             
         bookings_list.sort(key=lambda x: x['created_at'], reverse=True)

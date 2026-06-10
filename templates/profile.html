@@ -419,6 +419,10 @@
                                     <span class="info-label">${b.type === 'membership' ? 'Subscription / Price' : 'Players / Price'}</span>
                                     <span class="info-val">${playersPriceLabel}</span>
                                 </div>
+                                <div class="info-block">
+                                    <span class="info-label">Payment Method</span>
+                                    <span class="info-val" style="text-transform: capitalize;"><i class="${b.payment_method === 'offline' ? 'fa-solid fa-handshake text-accent' : 'fa-solid fa-qrcode text-accent'}"></i> ${b.payment_method === 'offline' ? 'Offline' : 'Online (UPI)'}</span>
+                                </div>
                             </div>
                             <div class="card-footer-row" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                                 <span class="created-at-text">Booked on: ${new Date(b.created_at).toLocaleDateString()}</span>

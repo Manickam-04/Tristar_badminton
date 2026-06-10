@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     status VARCHAR(50) NOT NULL DEFAULT 'confirmed', -- 'confirmed' or 'cancelled'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     cancelled_at VARCHAR(50),
+    payment_method VARCHAR(50) DEFAULT 'online',
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(court_id) REFERENCES courts(id),
     FOREIGN KEY(slot_id) REFERENCES slots(id)

@@ -491,7 +491,12 @@ function loadBookingsLog() {
                                 <td>${b.court_name}</td>
                                 <td><i class="fa-regular fa-clock"></i> ${timeRangeText}</td>
                                 <td>${membersText}</td>
-                                <td class="text-accent"><strong>₹${b.price.toFixed(2)}</strong></td>
+                                <td class="text-accent">
+                                    <strong>₹${b.price.toFixed(2)}</strong>
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-transform: capitalize; font-weight: 500;">
+                                        <i class="${b.payment_method === 'offline' ? 'fa-solid fa-handshake text-accent' : 'fa-solid fa-qrcode text-accent'}"></i> ${b.payment_method === 'offline' ? 'Offline' : 'Online (UPI)'}
+                                    </div>
+                                </td>
                                 <td>
                                     <div class="status-cell-container">
                                         <span class="history-status-badge ${badgeClass}">${statusText}</span>

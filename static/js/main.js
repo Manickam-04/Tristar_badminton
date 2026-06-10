@@ -2,6 +2,8 @@
 let selectedSlotId = null;
 let selectedSlotPrice = 0.0;
 let activeCancelBookingId = null;
+let currentBookingId = null;
+let currentBookingPrice = 0.0;
 
 document.addEventListener('DOMContentLoaded', () => {
     initBookingPage();
@@ -31,7 +33,7 @@ function initBookingPage() {
     // Hook modal submission events
     const submitBtn = document.getElementById('btn-submit-booking-action');
     if (submitBtn) {
-        submitBtn.addEventListener('click', processBookingSubmit);
+        submitBtn.addEventListener('click', preBookSlotAndShowPaymentMethod);
     }
 
     const cancelConfirmBtn = document.getElementById('btn-submit-cancellation-action');
@@ -249,8 +251,17 @@ function adjustPlayers(val) {
 }
 
 // Submit payment / Booking Reservation
-function processBookingSubmit() {
-    if (!selectedSlotId) return;
+let isBookingProcessing = false;
+
+function preBookSlotAndShowPaymentMethod() {
+    if (!selectedSlotId || isBookingProcessing) return;
+
+    isBookingProcessing = true;
+    const submitBtn = document.getElementById('btn-submit-booking-action');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Reserving...';
+    }
 
     const dateVal = document.getElementById('booking-date-picker').value;
     const courtVal = document.getElementById('booking-court-select').value;
@@ -260,13 +271,9 @@ function processBookingSubmit() {
         court_id: parseInt(courtVal),
         slot_id: selectedSlotId,
         date: dateVal,
-        num_members: playersCount
+        num_members: playersCount,
+        payment_method: 'online' // Default starting method
     };
-
-    // Disable action button to prevent click spamming
-    const submitBtn = document.getElementById('btn-submit-booking-action');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Reserving...';
 
     fetch('/api/book', {
         method: 'POST',
@@ -275,26 +282,133 @@ function processBookingSubmit() {
     })
     .then(res => res.json())
     .then(data => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pay & Book Now';
+        isBookingProcessing = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pay & Book Now';
+        }
 
         if (data.success) {
-            closeBookingModal('confirm');
-            const amount = (data.booking && data.booking.total_price) ? data.booking.total_price : 0;
-            const bookingId = (data.booking && data.booking.id) ? data.booking.id : null;
-            window.showUPIPaymentModal(amount, '/profile', bookingId, null, null, data.message);
+            currentBookingId = data.booking.id;
+            currentBookingPrice = data.booking.total_price;
+
+            // Transition to payment method selection modal
+            document.getElementById('modal-confirm-booking').classList.add('hidden');
+            document.getElementById('modal-payment-method').classList.remove('hidden');
+
+            // Refresh slots on screen so other users see this slot as Booked
+            loadLiveSlots();
         } else {
             closeBookingModal('confirm');
-            window.showToast(data.message, 'error');
+            window.showToast(data.message || "Failed to reserve slot.", 'error');
             loadLiveSlots();
         }
     })
     .catch(err => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pay & Book Now';
+        isBookingProcessing = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pay & Book Now';
+        }
         closeBookingModal('confirm');
-        console.error(err);
+        console.error("Error reserving slot:", err);
         window.showToast("Reserve request timed out.", 'error');
+        loadLiveSlots();
+    });
+}
+
+function cancelPreBooking(bookingId) {
+    if (!bookingId) return;
+    fetch('/api/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        loadLiveSlots();
+    })
+    .catch(err => console.error("Error releasing slot:", err));
+}
+
+// Payment Selection Modal Handlers
+function closePaymentMethodModal() {
+    if (currentBookingId) {
+        cancelPreBooking(currentBookingId);
+    }
+    document.getElementById('modal-payment-method').classList.add('hidden');
+    // Hide confirm modal too since reservation was cancelled
+    closeBookingModal('confirm');
+    currentBookingId = null;
+    selectedSlotId = null;
+}
+
+function selectPaymentMethod(method) {
+    if (isBookingProcessing || !currentBookingId) return;
+
+    if (method === 'online') {
+        document.getElementById('modal-payment-method').classList.add('hidden');
+        closeBookingModal('confirm');
+        window.showUPIPaymentModal(currentBookingPrice, '/profile', currentBookingId, null, null, "Slot booked successfully!");
+        currentBookingId = null;
+        selectedSlotId = null;
+    } else if (method === 'offline') {
+        document.getElementById('modal-payment-method').classList.add('hidden');
+        document.getElementById('modal-confirm-offline').classList.remove('hidden');
+    }
+}
+
+function closeOfflineConfirmModal() {
+    document.getElementById('modal-confirm-offline').classList.add('hidden');
+    document.getElementById('modal-payment-method').classList.remove('hidden');
+}
+
+function confirmOfflineBooking() {
+    if (isBookingProcessing || !currentBookingId) return;
+    isBookingProcessing = true;
+
+    const yesBtn = document.querySelector('#modal-confirm-offline .btn-modal-confirm');
+    if (yesBtn) yesBtn.disabled = true;
+
+    fetch('/api/book/update-method', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            booking_id: currentBookingId,
+            payment_method: 'offline'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        isBookingProcessing = false;
+        if (yesBtn) yesBtn.disabled = false;
+        document.getElementById('modal-confirm-offline').classList.add('hidden');
+        closeBookingModal('confirm');
+
+        if (data.success) {
+            window.showToast("Slot booked successfully (Pay after play)!", 'success');
+            currentBookingId = null;
+            selectedSlotId = null;
+            loadLiveSlots();
+        } else {
+            window.showToast(data.message || "Failed to complete booking.", 'error');
+            cancelPreBooking(currentBookingId);
+            currentBookingId = null;
+            selectedSlotId = null;
+        }
+    })
+    .catch(err => {
+        isBookingProcessing = false;
+        if (yesBtn) yesBtn.disabled = false;
+        document.getElementById('modal-confirm-offline').classList.add('hidden');
+        closeBookingModal('confirm');
+        console.error("Error confirming offline booking:", err);
+        window.showToast("Request timed out.", 'error');
+        if (currentBookingId) {
+            cancelPreBooking(currentBookingId);
+            currentBookingId = null;
+            selectedSlotId = null;
+        }
     });
 }
 

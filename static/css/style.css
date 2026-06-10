@@ -1423,7 +1423,7 @@ select option {
 
 .card-body-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 10px;
     background: rgba(0, 0, 0, 0.15);
     border: 1px solid var(--border-color);

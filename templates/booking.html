@@ -138,6 +138,50 @@
         </div>
     </div>
 
+    <!-- PAYMENT METHOD SELECTION MODAL -->
+    <div class="modal-overlay hidden" id="modal-payment-method" style="z-index: 1001;">
+        <div class="modal-card glass-card slide-up" style="max-width: 400px; margin: auto;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-credit-card text-accent"></i> Select Payment Method</h3>
+                <button class="modal-close-btn" onclick="closePaymentMethodModal()">&times;</button>
+            </div>
+            <div class="modal-body text-center" style="padding: 24px 20px; text-align: center;">
+                <p style="margin-bottom: 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.5;">Choose how you would like to pay for this booking:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                    <button class="btn-modal-confirm" id="btn-pay-online" onclick="selectPaymentMethod('online')" style="padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; width: 100%; border: none; cursor: pointer; border-radius: 8px;">
+                        <i class="fa-solid fa-qrcode"></i> UPI QR (Online)
+                    </button>
+                    
+                    <button class="btn-modal-confirm" id="btn-pay-offline" onclick="selectPaymentMethod('offline')" style="padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-primary); width: 100%; cursor: pointer; border-radius: 8px;">
+                        <i class="fa-solid fa-handshake text-accent"></i> Pay after play (Offline)
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center; padding: 15px 20px;">
+                <button class="btn-modal-cancel" onclick="closePaymentMethodModal()" style="width: 100%;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OFFLINE CONFIRMATION MODAL -->
+    <div class="modal-overlay hidden" id="modal-confirm-offline" style="z-index: 1002;">
+        <div class="modal-card glass-card slide-up" style="max-width: 400px; margin: auto;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-question text-accent"></i> Confirm Offline Booking</h3>
+                <button class="modal-close-btn" onclick="closeOfflineConfirmModal()">&times;</button>
+            </div>
+            <div class="modal-body text-center" style="padding: 24px 20px; text-align: center; line-height: 1.5;">
+                <p style="font-size: 15px; margin-bottom: 12px; color: var(--text-primary);">Are you sure you want to book this slot with <strong>Pay after play (Offline)</strong>?</p>
+                <p style="font-size: 13px; color: var(--text-secondary);">You will pay directly at the venue after your slot timing has ended.</p>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 12px; padding: 15px 20px;">
+                <button class="btn-modal-cancel" onclick="closeOfflineConfirmModal()" style="flex: 1; margin: 0;">No, Go Back</button>
+                <button class="btn-modal-confirm" onclick="confirmOfflineBooking()" style="flex: 1; margin: 0; border: none; cursor: pointer; border-radius: 8px;">Yes, Book Slot</button>
+            </div>
+        </div>
+    </div>
+
     <!-- CANCEL BOOKING MODAL -->
     <div class="modal-overlay hidden" id="modal-cancel-booking">
         <div class="modal-card glass-card slide-up">

@@ -215,6 +215,12 @@ def init_db():
             cursor.execute("ALTER TABLE memberships ADD COLUMN cancelled_at VARCHAR(50);")
             conn.commit()
             print("Migration: Added cancelled_at column to memberships table.")
+
+        # 4. bookings table: payment_method
+        if not column_exists(cursor, 'bookings', 'payment_method'):
+            cursor.execute("ALTER TABLE bookings ADD COLUMN payment_method VARCHAR(50) DEFAULT 'online';")
+            conn.commit()
+            print("Migration: Added payment_method column to bookings table.")
             
     except Exception as e:
         conn.rollback()
