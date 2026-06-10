@@ -16,4 +16,6 @@ __pycache__/
 venv/
 .idea/
 .vscode/
+# Ignore local secrets
+.env
 scratch/

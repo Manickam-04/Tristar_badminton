@@ -39,6 +39,22 @@ def start_backup_scheduler():
 
 start_backup_scheduler()
 
+@app.route('/api/cron/backup')
+def api_cron_backup():
+    """Secure endpoint triggered by Vercel Cron to run database backups."""
+    auth_header = request.headers.get('Authorization')
+    vercel_cron_secret = os.environ.get('CRON_SECRET')
+    
+    # If a CRON_SECRET environment variable is configured in Vercel, enforce authorization
+    if vercel_cron_secret and auth_header != f"Bearer {vercel_cron_secret}":
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        
+    try:
+        database.run_auto_backup()
+        return jsonify({'success': True, 'message': 'Cron backup completed successfully.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Cron backup error: {str(e)}'}), 500
+
 # --- Timezone Helpers (Indian Standard Time: UTC+5:30) ---
 LOCAL_TZ = timezone(timedelta(hours=5, minutes=30))
 
@@ -498,8 +514,8 @@ def api_book_slot():
         # Start isolated immediate lock
         conn.execute("BEGIN IMMEDIATE TRANSACTION;")
         
-        # 1. Verify if slot is globally or specifically blocked
-        slot = conn.execute("SELECT * FROM slots WHERE id = ? AND court_id = ?", (slot_id, court_id)).fetchone()
+        # 1. Verify if slot is globally or specifically blocked (lock row for concurrency safety)
+        slot = conn.execute("SELECT * FROM slots WHERE id = ? AND court_id = ? FOR UPDATE", (slot_id, court_id)).fetchone()
         if not slot:
             conn.rollback()
             return jsonify({'success': False, 'message': 'Invalid slot or court selection.'}), 400
@@ -629,7 +645,7 @@ def api_book_membership():
     try:
         conn.execute("BEGIN IMMEDIATE TRANSACTION;")
         
-        slot = conn.execute("SELECT * FROM slots WHERE id = ? AND court_id = ?", (slot_id, court_id)).fetchone()
+        slot = conn.execute("SELECT * FROM slots WHERE id = ? AND court_id = ? FOR UPDATE", (slot_id, court_id)).fetchone()
         if not slot:
             conn.rollback()
             return jsonify({'success': False, 'message': 'Invalid slot or court selection.'}), 400
@@ -854,6 +870,7 @@ def api_cancel_booking():
                 FROM memberships m
                 JOIN slots s ON m.slot_id = s.id
                 WHERE m.id = ?
+                FOR UPDATE OF m
                 """, (membership_id,)
             ).fetchone()
             if not membership:
@@ -893,6 +910,7 @@ def api_cancel_booking():
                 FROM bookings b
                 JOIN slots s ON b.slot_id = s.id
                 WHERE b.id = ?
+                FOR UPDATE OF b
                 """, (booking_id,)
             ).fetchone()
             if not booking:
@@ -1056,7 +1074,7 @@ def api_get_notifications():
                 JOIN users u ON b.user_id = u.id
                 JOIN courts c ON b.court_id = c.id
                 JOIN slots s ON b.slot_id = s.id
-                WHERE b.created_at >= datetime('now', '-2 hour')
+                WHERE b.created_at >= NOW() - INTERVAL '2 hours'
                 ORDER BY b.created_at DESC
                 """
             ).fetchall()
@@ -1180,7 +1198,10 @@ def admin_api_slot_block():
             # Block slot for specific date
             if is_blocked:
                 conn.execute(
-                    "INSERT OR REPLACE INTO slot_blocks (slot_id, block_date, reason) VALUES (?, ?, ?)",
+                    """
+                    INSERT INTO slot_blocks (slot_id, block_date, reason) VALUES (?, ?, ?)
+                    ON CONFLICT (slot_id, block_date) DO UPDATE SET reason = EXCLUDED.reason
+                    """,
                     (slot_id, block_date, reason)
                 )
             else:
@@ -1218,7 +1239,10 @@ def admin_api_slot_price():
         else:
             # Create/overwrite override price for specific date
             conn.execute(
-                "INSERT OR REPLACE INTO pricing_overrides (slot_id, override_date, price) VALUES (?, ?, ?)",
+                """
+                INSERT INTO pricing_overrides (slot_id, override_date, price) VALUES (?, ?, ?)
+                ON CONFLICT (slot_id, override_date) DO UPDATE SET price = EXCLUDED.price
+                """,
                 (slot_id, date_str, price)
             )
         conn.commit()
@@ -1420,7 +1444,7 @@ def admin_api_reports():
         # Monthly grouping revenue
         monthly_revenue = conn.execute(
             """
-            SELECT strftime('%Y-%m', booking_date) as month, SUM(total_price) as revenue, COUNT(*) as bookings_count
+            SELECT to_char(to_date(booking_date, 'YYYY-MM-DD'), 'YYYY-MM') as month, SUM(total_price) as revenue, COUNT(*) as bookings_count
             FROM bookings
             WHERE status = 'confirmed'
             GROUP BY month
@@ -1431,7 +1455,7 @@ def admin_api_reports():
         # Weekly grouping revenue
         weekly_revenue = conn.execute(
             """
-            SELECT strftime('%Y-%W', booking_date) as week, SUM(total_price) as revenue, COUNT(*) as bookings_count
+            SELECT to_char(to_date(booking_date, 'YYYY-MM-DD'), 'IYYY-IW') as week, SUM(total_price) as revenue, COUNT(*) as bookings_count
             FROM bookings
             WHERE status = 'confirmed'
             GROUP BY week

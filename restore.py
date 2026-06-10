@@ -1,24 +1,26 @@
 import os
-import shutil
 import sys
-import sqlite3
+import psycopg2
 import database
 
 def list_backups(backup_dir):
     if not os.path.exists(backup_dir):
         return []
     return sorted(
-        [f for f in os.listdir(backup_dir) if f.startswith("badminton_backup_") and f.endswith(".db")],
+        [f for f in os.listdir(backup_dir) if f.startswith("badminton_backup_") and f.endswith(".sql")],
         reverse=True
     )
 
 def main():
-    db_path = database.DATABASE_PATH
-    db_dir = os.path.dirname(db_path)
+    if not database.DATABASE_URL:
+        print("Error: DATABASE_URL environment variable is not set!")
+        sys.exit(1)
+        
+    db_dir = os.path.dirname(__file__)
     backup_dir = os.path.join(db_dir, 'backups')
     
-    print("=== Badminton Database Restore Tool ===")
-    print(f"Active database path: {db_path}")
+    print("=== Badminton Database Restore Tool (PostgreSQL) ===")
+    print(f"Target Database URL: {database.DATABASE_URL[:30]}...")
     print(f"Backup directory: {backup_dir}")
     
     backups = list_backups(backup_dir)
@@ -67,40 +69,32 @@ def main():
         print("Confirmation failed. Restore cancelled.")
         sys.exit(0)
         
-    # Overwrite active database file
+    # Read backup file content
     try:
-        print("Verifying backup integrity...")
-        # Check if backup file is a valid sqlite db
-        temp_conn = sqlite3.connect(backup_path)
-        temp_conn.execute("PRAGMA integrity_check;")
-        temp_conn.close()
-        
-        print("Copying backup to active database file...")
-        # Make a backup of the current database just in case before overwriting
-        if os.path.exists(db_path):
-            pre_restore_backup = db_path + ".pre_restore_bak"
-            shutil.copy2(db_path, pre_restore_backup)
-            print(f"Saved pre-restore backup of the current active database to: {os.path.basename(pre_restore_backup)}")
-            
-        shutil.copy2(backup_path, db_path)
-        
-        # If WAL journal mode exists, we should delete WAL files to ensure clean start
-        wal_path = db_path + "-wal"
-        shm_path = db_path + "-shm"
-        if os.path.exists(wal_path):
-            try:
-                os.remove(wal_path)
-            except Exception:
-                pass
-        if os.path.exists(shm_path):
-            try:
-                os.remove(shm_path)
-            except Exception:
-                pass
-            
-        print("Database restore completed successfully!")
+        print("Reading backup file...")
+        with open(backup_path, 'r', encoding='utf-8') as f:
+            sql_script = f.read()
     except Exception as e:
-        print(f"Error during restore: {e}")
+        print(f"Error reading backup file: {e}")
+        sys.exit(1)
+        
+    # Execute restore script in a transaction
+    try:
+        print("Connecting to database and executing restore script...")
+        # Get standard raw psycopg2 connection to run restore directly
+        conn = psycopg2.connect(database.DATABASE_URL)
+        cursor = conn.cursor()
+        
+        # Execute the entire script
+        cursor.execute(sql_script)
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("\nDatabase restore completed successfully!")
+    except Exception as e:
+        print(f"\nError during restore execution: {e}")
+        print("Transaction has been rolled back. Database remains in its previous state.")
         sys.exit(1)
 
 if __name__ == '__main__':
