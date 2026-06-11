@@ -941,7 +941,11 @@ def api_cancel_booking():
                 (get_local_now().strftime('%Y-%m-%d %H:%M:%S'), membership_id)
             )
             conn.commit()
-            return jsonify({'success': True, 'message': 'Membership subscription cancelled successfully.'})
+            return jsonify({
+                'success': True, 
+                'message': 'Membership subscription cancelled successfully.',
+                'payment_method': 'online'
+            })
             
         else:
             # Cancel hourly booking
@@ -979,12 +983,17 @@ def api_cancel_booking():
                 conn.rollback()
                 return jsonify({'success': False, 'message': 'Booking is already cancelled.'}), 400
                 
+            payment_method = booking['payment_method']
             conn.execute(
                 "UPDATE bookings SET status = 'cancelled', cancelled_at = ? WHERE id = ?", 
                 (get_local_now().strftime('%Y-%m-%d %H:%M:%S'), booking_id)
             )
             conn.commit()
-            return jsonify({'success': True, 'message': 'Booking cancelled successfully.'})
+            return jsonify({
+                'success': True, 
+                'message': 'Booking cancelled successfully.',
+                'payment_method': payment_method
+            })
             
     except Exception as e:
         conn.rollback()

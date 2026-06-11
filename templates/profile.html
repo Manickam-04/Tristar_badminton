@@ -32,7 +32,7 @@
         </div>
         <div>
             <p style="color: var(--text-error); font-size: 16px; font-weight: 500;">
-                For refund after cancellation contact <a href="tel:+919994093575" style="color: var(--text-accent);">+91 9994093575</a>.
+                For refund after cancellation contact <a href="tel:+919994093575" style="color: var(--text-accent);">+91 9994093575</a> (Only for online payment method).
             </p>
         </div>
     </div>
@@ -217,6 +217,7 @@
     }
 
     let activeCancelBookingId = null;
+    let activeCancelBookingPaymentMethod = null;
 
     function openEditProfileModal() {
         document.getElementById('modal-edit-profile').classList.remove('hidden');
@@ -392,7 +393,7 @@
                             `;
                         } else {
                             actionButton = `
-                                <button class="btn-card-cancel" onclick="triggerProfileCancel(${b.booking_id}, '${b.date}', '${b.type === 'membership' ? 'Daily ' : ''}${formatTimeTo12Hour(b.time)}', '${b.type}')">
+                                <button class="btn-card-cancel" onclick="triggerProfileCancel(${b.booking_id}, '${b.date}', '${b.type === 'membership' ? 'Daily ' : ''}${formatTimeTo12Hour(b.time)}', '${b.type}', '${b.payment_method}')">
                                     <i class="fa-solid fa-ban"></i> ${b.type === 'membership' ? 'Cancel Membership' : 'Cancel Booking'}
                                 </button>
                             `;
@@ -447,8 +448,9 @@
     }
 
     // Modal cancellation triggers
-    function triggerProfileCancel(bookingId, date, time, type) {
+    function triggerProfileCancel(bookingId, date, time, type, paymentMethod) {
         activeCancelBookingId = bookingId;
+        activeCancelBookingPaymentMethod = paymentMethod;
         document.getElementById('cancel-modal-date').innerText = date;
         document.getElementById('cancel-modal-time').innerText = time;
         
@@ -482,7 +484,10 @@
         .then(data => {
             closeCancelModal();
             if (data.success) {
-                const msg = isMembership ? "Membership subscription cancelled successfully." : "Session cancelled successfully.";
+                let msg = isMembership ? "Membership subscription cancelled successfully." : "Session cancelled successfully.";
+                if (data.payment_method === 'online') {
+                    msg += " Contact Manager for refund";
+                }
                 window.showToast(msg, 'success');
                 loadBookingHistory();
             } else {

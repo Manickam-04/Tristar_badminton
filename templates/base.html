@@ -115,31 +115,31 @@
     <div class="toast-container" id="toast-root"></div>
 
     <!-- UPI PAYMENT MODAL -->
-    <div class="modal-overlay hidden" id="modal-upi-payment" style="z-index: 10001;">
-        <div class="modal-card glass-card slide-up" style="max-width: 440px;">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-qrcode text-accent"></i> UPI Payment</h3>
-                <button class="modal-close-btn" id="btn-close-upi-payment">&times;</button>
+    <div class="modal-overlay hidden" id="modal-upi-payment" style="z-index: 10001; padding: 10px;">
+        <div class="modal-card glass-card slide-up" style="max-width: 350px; margin: auto; max-height: 95vh; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="modal-header" style="padding: 12px 15px;">
+                <h3 style="font-size: 16px;"><i class="fa-solid fa-qrcode text-accent"></i> UPI Payment</h3>
+                <button class="modal-close-btn" id="btn-close-upi-payment" style="font-size: 20px;">&times;</button>
             </div>
             
-            <div class="modal-body" style="text-align: center; display: flex; flex-direction: column; gap: 15px; align-items: center;">
-                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin: 0; text-transform: lowercase;">
-                    download the qr and make the payment throught your upi app and then check your bookings
+            <div class="modal-body" style="text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 14px 15px; overflow-y: auto; flex: 1;">
+                <p style="font-size: 12px; color: #ffffff; line-height: 1.4; margin: 0; padding: 8px 10px; background: rgba(245, 158, 11, 0.15); border: 2px solid var(--color-blocked); border-radius: var(--radius-sm); font-weight: 700; text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: var(--color-blocked); margin-right: 6px; font-size: 13px;"></i> Download the QR code and make the payment through your UPI app and then check your bookings.
                 </p>
                 
-                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 280px; box-sizing: border-box;">
+                <div style="background: rgba(255, 255, 255, 0.04); padding: 4px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 155px; box-sizing: border-box; margin: 5px 0 0 0;">
                     <img id="upi-payment-qr-img" src="" alt="UPI QR Code" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: block;" />
-                    <span id="upi-payment-amount-label" class="text-accent" style="font-size: 20px; font-weight: 800; margin-top: 10px; font-family: 'Outfit', sans-serif;">₹0.00</span>
+                    <span id="upi-payment-amount-label" class="text-accent" style="font-size: 16px; font-weight: 800; margin-top: 4px; font-family: 'Outfit', sans-serif;">₹0.00</span>
                 </div>
                 
                 <!-- Countdown or progress indicator -->
-                <div id="upi-download-status" style="font-size: 14px; font-weight: 600; color: var(--color-accent); min-height: 20px;"></div>
+                <div id="upi-download-status" style="font-size: 13px; font-weight: 700; color: var(--color-accent); min-height: 18px;"></div>
             </div>
 
-            <div class="modal-footer" style="justify-content: center; width: 100%;">
-                <button class="btn-modal-cancel" id="btn-cancel-upi-payment" style="flex: 1;">Close</button>
-                <button class="btn-modal-confirm" id="btn-download-upi-qr" style="flex: 1; justify-content: center;">
-                    <i class="fa-solid fa-download"></i> Download QR Code
+            <div class="modal-footer" style="justify-content: center; width: 100%; padding: 12px 15px; gap: 10px;">
+                <button class="btn-modal-cancel" id="btn-cancel-upi-payment" style="flex: 1; margin: 0; padding: 8px 12px; font-size: 14px;">Close</button>
+                <button class="btn-modal-confirm" id="btn-download-upi-qr" style="flex: 1; justify-content: center; margin: 0; padding: 8px 12px; font-size: 14px;">
+                    <i class="fa-solid fa-download"></i> Download QR
                 </button>
             </div>
         </div>

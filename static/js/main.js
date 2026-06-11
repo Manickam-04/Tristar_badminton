@@ -399,10 +399,10 @@ function confirmOfflineBooking() {
         closeBookingModal('confirm');
 
         if (data.success) {
-            window.showToast("Slot booked successfully (Pay after play)!", 'success');
+            sessionStorage.setItem('booking_success_msg', "Slot booked successfully (Pay after play)!");
             currentBookingId = null;
             selectedSlotId = null;
-            loadLiveSlots();
+            window.location.href = '/profile';
         } else {
             window.showToast(data.message || "Failed to complete booking.", 'error');
             cancelPreBooking(currentBookingId, true);
@@ -445,7 +445,11 @@ function processCancellationSubmit() {
         closeBookingModal('cancel');
 
         if (data.success) {
-            window.showToast("Your booking was cancelled.", 'success');
+            let msg = "Your booking was cancelled.";
+            if (data.payment_method === 'online') {
+                msg += " Contact Manager for refund";
+            }
+            window.showToast(msg, 'success');
             loadLiveSlots();
         } else {
             window.showToast(data.message, 'error');
