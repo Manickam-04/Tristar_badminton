@@ -127,11 +127,11 @@ button {
     transition: var(--transition-smooth);
 }
 
-.btn-book-slot-cta:hover {
+/* .btn-book-slot-cta:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
     background: linear-gradient(135deg, var(--color-accent-hover), #10B981);
-}
+} */
 
 .btn-book-slot-cta.btn-small {
     padding: 8px 16px;
