@@ -290,240 +290,240 @@
         };
 
         // Global Canvas Agreement Downloader
-        window.downloadAgreementImage = function(details) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1200;
-            canvas.height = 850;
-            const ctx = canvas.getContext('2d');
+        // window.downloadAgreementImage = function(details) {
+        //     const canvas = document.createElement('canvas');
+        //     canvas.width = 1200;
+        //     canvas.height = 850;
+        //     const ctx = canvas.getContext('2d');
             
-            // Background Gradient
-            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            grad.addColorStop(0, '#0a1128');
-            grad.addColorStop(0.5, '#102a43');
-            grad.addColorStop(1, '#072236');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        //     // Background Gradient
+        //     const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        //     grad.addColorStop(0, '#0a1128');
+        //     grad.addColorStop(0.5, '#102a43');
+        //     grad.addColorStop(1, '#072236');
+        //     ctx.fillStyle = grad;
+        //     ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Inner Glassmorphism Panel
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-            ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 20);
-            } else {
-                ctx.rect(40, 40, canvas.width - 80, canvas.height - 80);
-            }
-            ctx.fill();
+        //     // Inner Glassmorphism Panel
+        //     ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        //     ctx.beginPath();
+        //     if (ctx.roundRect) {
+        //         ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 20);
+        //     } else {
+        //         ctx.rect(40, 40, canvas.width - 80, canvas.height - 80);
+        //     }
+        //     ctx.fill();
             
-            // Emerald Border
-            ctx.strokeStyle = '#10B981';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(45, 45, canvas.width - 90, canvas.height - 90, 18);
-            } else {
-                ctx.rect(45, 45, canvas.width - 90, canvas.height - 90);
-            }
-            ctx.stroke();
+        //     // Emerald Border
+        //     ctx.strokeStyle = '#10B981';
+        //     ctx.lineWidth = 4;
+        //     ctx.beginPath();
+        //     if (ctx.roundRect) {
+        //         ctx.roundRect(45, 45, canvas.width - 90, canvas.height - 90, 18);
+        //     } else {
+        //         ctx.rect(45, 45, canvas.width - 90, canvas.height - 90);
+        //     }
+        //     ctx.stroke();
             
-            // Gold Border
-            ctx.strokeStyle = '#FBBF24';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(55, 55, canvas.width - 110, canvas.height - 110, 15);
-            } else {
-                ctx.rect(55, 55, canvas.width - 110, canvas.height - 110);
-            }
-            ctx.stroke();
+        //     // Gold Border
+        //     ctx.strokeStyle = '#FBBF24';
+        //     ctx.lineWidth = 1.5;
+        //     ctx.beginPath();
+        //     if (ctx.roundRect) {
+        //         ctx.roundRect(55, 55, canvas.width - 110, canvas.height - 110, 15);
+        //     } else {
+        //         ctx.rect(55, 55, canvas.width - 110, canvas.height - 110);
+        //     }
+        //     ctx.stroke();
             
-            // Shield Decoration
-            ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
-            ctx.shadowBlur = 15;
-            ctx.fillStyle = '#10B981';
-            ctx.beginPath();
-            ctx.moveTo(600, 90);
-            ctx.lineTo(630, 120);
-            ctx.lineTo(600, 150);
-            ctx.lineTo(570, 120);
-            ctx.closePath();
-            ctx.fill();
+        //     // Shield Decoration
+        //     ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+        //     ctx.shadowBlur = 15;
+        //     ctx.fillStyle = '#10B981';
+        //     ctx.beginPath();
+        //     ctx.moveTo(600, 90);
+        //     ctx.lineTo(630, 120);
+        //     ctx.lineTo(600, 150);
+        //     ctx.lineTo(570, 120);
+        //     ctx.closePath();
+        //     ctx.fill();
             
-            // Gold Star Inside Shield
-            ctx.fillStyle = '#FBBF24';
-            ctx.beginPath();
-            ctx.moveTo(600, 105);
-            ctx.lineTo(610, 120);
-            ctx.lineTo(600, 135);
-            ctx.lineTo(590, 120);
-            ctx.closePath();
-            ctx.fill();
+        //     // Gold Star Inside Shield
+        //     ctx.fillStyle = '#FBBF24';
+        //     ctx.beginPath();
+        //     ctx.moveTo(600, 105);
+        //     ctx.lineTo(610, 120);
+        //     ctx.lineTo(600, 135);
+        //     ctx.lineTo(590, 120);
+        //     ctx.closePath();
+        //     ctx.fill();
             
-            ctx.shadowBlur = 0;
+        //     ctx.shadowBlur = 0;
             
-            // Header Text
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = '800 32px "Outfit", sans-serif';
-            ctx.fillText('TRISTAR BADMINTON ACADEMY', 600, 205);
+        //     // Header Text
+        //     ctx.textAlign = 'center';
+        //     ctx.fillStyle = '#FFFFFF';
+        //     ctx.font = '800 32px "Outfit", sans-serif';
+        //     ctx.fillText('TRISTAR BADMINTON ACADEMY', 600, 205);
             
-            ctx.fillStyle = '#10B981';
-            ctx.font = '600 16px "Outfit", sans-serif';
-            ctx.fillText('OFFICIAL MEMBERSHIP SUBSCRIPTION AGREEMENT', 600, 235);
+        //     ctx.fillStyle = '#10B981';
+        //     ctx.font = '600 16px "Outfit", sans-serif';
+        //     ctx.fillText('OFFICIAL MEMBERSHIP SUBSCRIPTION AGREEMENT', 600, 235);
             
-            // Divider line
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(200, 260);
-            ctx.lineTo(1000, 260);
-            ctx.stroke();
+        //     // Divider line
+        //     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        //     ctx.lineWidth = 1;
+        //     ctx.beginPath();
+        //     ctx.moveTo(200, 260);
+        //     ctx.lineTo(1000, 260);
+        //     ctx.stroke();
             
-            // Description
-            ctx.fillStyle = '#E2E8F0';
-            ctx.font = 'italic 15px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText('This agreement certifies that the slot reservation is locked and confirmed for the period listed below.', 600, 295);
+        //     // Description
+        //     ctx.fillStyle = '#E2E8F0';
+        //     ctx.font = 'italic 15px "Plus Jakarta Sans", sans-serif';
+        //     ctx.fillText('This agreement certifies that the slot reservation is locked and confirmed for the period listed below.', 600, 295);
             
-            // Detail drawer helper
-            function drawDetailItem(x, y, label, value, valColor = '#FFFFFF') {
-                ctx.textAlign = 'left';
-                ctx.fillStyle = '#94A3B8';
-                ctx.font = '600 13px "Outfit", sans-serif';
-                ctx.fillText(label.toUpperCase(), x, y);
+        //     // Detail drawer helper
+        //     function drawDetailItem(x, y, label, value, valColor = '#FFFFFF') {
+        //         ctx.textAlign = 'left';
+        //         ctx.fillStyle = '#94A3B8';
+        //         ctx.font = '600 13px "Outfit", sans-serif';
+        //         ctx.fillText(label.toUpperCase(), x, y);
                 
-                ctx.fillStyle = valColor;
-                ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
-                ctx.fillText(value, x, y + 25);
-            }
+        //         ctx.fillStyle = valColor;
+        //         ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+        //         ctx.fillText(value, x, y + 25);
+        //     }
             
-            // Left Column (Member Info)
-            let currentY = 360;
-            const startXLeft = 130;
-            drawDetailItem(startXLeft, currentY, 'Member Name', details.name || 'Anonymous User');
-            currentY += 65;
-            drawDetailItem(startXLeft, currentY, 'Registered Email', details.email || '—');
-            currentY += 65;
-            drawDetailItem(startXLeft, currentY, 'Mobile Number', details.mobile || '—');
-            currentY += 65;
-            drawDetailItem(startXLeft, currentY, 'Agreement ID', `TBA-MEM-${details.membership_id.toString().padStart(5, '0')}`, '#FBBF24');
+        //     // Left Column (Member Info)
+        //     let currentY = 360;
+        //     const startXLeft = 130;
+        //     drawDetailItem(startXLeft, currentY, 'Member Name', details.name || 'Anonymous User');
+        //     currentY += 65;
+        //     drawDetailItem(startXLeft, currentY, 'Registered Email', details.email || '—');
+        //     currentY += 65;
+        //     drawDetailItem(startXLeft, currentY, 'Mobile Number', details.mobile || '—');
+        //     currentY += 65;
+        //     drawDetailItem(startXLeft, currentY, 'Agreement ID', `TBA-MEM-${details.membership_id.toString().padStart(5, '0')}`, '#FBBF24');
             
-            // Right Column (Subscription Info)
-            currentY = 360;
-            const startXRight = 630;
-            drawDetailItem(startXRight, currentY, 'Reserved Court Name', details.court_name);
-            currentY += 65;
-            drawDetailItem(startXRight, currentY, 'Daily Time Slot', details.time_range);
-            currentY += 65;
-            drawDetailItem(startXRight, currentY, 'Validity Period', `${details.start_date} to ${details.end_date}`, '#10B981');
-            currentY += 65;
-            drawDetailItem(startXRight, currentY, 'Duration & Amount Paid', `${details.duration} Plan  |  ₹${parseFloat(details.amount).toLocaleString('en-IN')}.00 (FULLY PAID)`, '#34D399');
+        //     // Right Column (Subscription Info)
+        //     currentY = 360;
+        //     const startXRight = 630;
+        //     drawDetailItem(startXRight, currentY, 'Reserved Court Name', details.court_name);
+        //     currentY += 65;
+        //     drawDetailItem(startXRight, currentY, 'Daily Time Slot', details.time_range);
+        //     currentY += 65;
+        //     drawDetailItem(startXRight, currentY, 'Validity Period', `${details.start_date} to ${details.end_date}`, '#10B981');
+        //     currentY += 65;
+        //     drawDetailItem(startXRight, currentY, 'Duration & Amount Paid', `${details.duration} Plan  |  ₹${parseFloat(details.amount).toLocaleString('en-IN')}.00 (FULLY PAID)`, '#34D399');
             
-            // Divider
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.beginPath();
-            ctx.moveTo(130, 640);
-            ctx.lineTo(1070, 640);
-            ctx.stroke();
+        //     // Divider
+        //     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        //     ctx.beginPath();
+        //     ctx.moveTo(130, 640);
+        //     ctx.lineTo(1070, 640);
+        //     ctx.stroke();
             
-            // Circular Seal
-            ctx.shadowColor = 'rgba(251, 191, 36, 0.3)';
-            ctx.shadowBlur = 10;
-            ctx.strokeStyle = '#FBBF24';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(220, 725, 45, 0, Math.PI * 2);
-            ctx.stroke();
+        //     // Circular Seal
+        //     ctx.shadowColor = 'rgba(251, 191, 36, 0.3)';
+        //     ctx.shadowBlur = 10;
+        //     ctx.strokeStyle = '#FBBF24';
+        //     ctx.lineWidth = 2;
+        //     ctx.beginPath();
+        //     ctx.arc(220, 725, 45, 0, Math.PI * 2);
+        //     ctx.stroke();
             
-            ctx.fillStyle = '#FBBF24';
-            ctx.font = 'bold 10px "Outfit", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('TRISTAR', 220, 715);
-            ctx.font = '800 11px "Outfit", sans-serif';
-            ctx.fillText('APPROVED', 220, 730);
-            ctx.font = 'bold 9px "Outfit", sans-serif';
-            ctx.fillText('SEAL', 220, 743);
-            ctx.shadowBlur = 0;
+        //     ctx.fillStyle = '#FBBF24';
+        //     ctx.font = 'bold 10px "Outfit", sans-serif';
+        //     ctx.textAlign = 'center';
+        //     ctx.fillText('TRISTAR', 220, 715);
+        //     ctx.font = '800 11px "Outfit", sans-serif';
+        //     ctx.fillText('APPROVED', 220, 730);
+        //     ctx.font = 'bold 9px "Outfit", sans-serif';
+        //     ctx.fillText('SEAL', 220, 743);
+        //     ctx.shadowBlur = 0;
             
-            // Signatures
-            ctx.textAlign = 'right';
-            ctx.fillStyle = '#E2E8F0';
-            ctx.font = 'italic 16px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText('Tristar Academy Executive Board', 1070, 715);
+        //     // Signatures
+        //     ctx.textAlign = 'right';
+        //     ctx.fillStyle = '#E2E8F0';
+        //     ctx.font = 'italic 16px "Plus Jakarta Sans", sans-serif';
+        //     ctx.fillText('Tristar Academy Executive Board', 1070, 715);
             
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(850, 730);
-            ctx.lineTo(1070, 730);
-            ctx.stroke();
+        //     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        //     ctx.lineWidth = 1;
+        //     ctx.beginPath();
+        //     ctx.moveTo(850, 730);
+        //     ctx.lineTo(1070, 730);
+        //     ctx.stroke();
             
-            ctx.fillStyle = '#94A3B8';
-            ctx.font = '600 11px "Outfit", sans-serif';
-            ctx.fillText('AUTHORIZED SIGNATURE', 1070, 750);
+        //     ctx.fillStyle = '#94A3B8';
+        //     ctx.font = '600 11px "Outfit", sans-serif';
+        //     ctx.fillText('AUTHORIZED SIGNATURE', 1070, 750);
             
-            // Date of Issue
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#64748B';
-            ctx.font = '600 11px "Outfit", sans-serif';
-            const issueDate = details.created_at ? new Date(details.created_at.replace ? details.created_at.replace(' ', 'T') : details.created_at).toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'}) : new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
-            ctx.fillText(`AGREEMENT ISSUED ON: ${issueDate}`, 600, 790);
+        //     // Date of Issue
+        //     ctx.textAlign = 'center';
+        //     ctx.fillStyle = '#64748B';
+        //     ctx.font = '600 11px "Outfit", sans-serif';
+        //     const issueDate = details.created_at ? new Date(details.created_at.replace ? details.created_at.replace(' ', 'T') : details.created_at).toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'}) : new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
+        //     ctx.fillText(`AGREEMENT ISSUED ON: ${issueDate}`, 600, 790);
             
-            // Mobile browser download compatibility bridge
-            const dataUrl = canvas.toDataURL('image/png');
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        //     // Mobile browser download compatibility bridge
+        //     const dataUrl = canvas.toDataURL('image/png');
+        //     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            if (isMobile) {
-                // Create custom preview modal overlay dynamically
-                const overlay = document.createElement('div');
-                overlay.style.position = 'fixed';
-                overlay.style.top = '0';
-                overlay.style.left = '0';
-                overlay.style.width = '100vw';
-                overlay.style.height = '100vh';
-                overlay.style.backgroundColor = 'rgba(11, 15, 25, 0.95)';
-                overlay.style.backdropFilter = 'blur(10px)';
-                overlay.style.webkitBackdropFilter = 'blur(10px)';
-                overlay.style.zIndex = '999999';
-                overlay.style.display = 'flex';
-                overlay.style.flexDirection = 'column';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.padding = '20px';
-                overlay.style.boxSizing = 'border-box';
+        //     if (isMobile) {
+        //         // Create custom preview modal overlay dynamically
+        //         const overlay = document.createElement('div');
+        //         overlay.style.position = 'fixed';
+        //         overlay.style.top = '0';
+        //         overlay.style.left = '0';
+        //         overlay.style.width = '100vw';
+        //         overlay.style.height = '100vh';
+        //         overlay.style.backgroundColor = 'rgba(11, 15, 25, 0.95)';
+        //         overlay.style.backdropFilter = 'blur(10px)';
+        //         overlay.style.webkitBackdropFilter = 'blur(10px)';
+        //         overlay.style.zIndex = '999999';
+        //         overlay.style.display = 'flex';
+        //         overlay.style.flexDirection = 'column';
+        //         overlay.style.alignItems = 'center';
+        //         overlay.style.justifyContent = 'center';
+        //         overlay.style.padding = '20px';
+        //         overlay.style.boxSizing = 'border-box';
                 
-                overlay.innerHTML = `
-                    <div style="width:100%; max-width:440px; background:rgba(30, 41, 59, 0.7); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:15px; color:#fff; font-family:'Outfit', sans-serif; box-shadow:0 30px 60px rgba(0,0,0,0.6); box-sizing:border-box; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
-                            <span style="font-weight:700; font-size:16px; color:#10B981; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-file-invoice"></i> Agreement Ready</span>
-                            <button class="close-overlay-btn" style="background:none; border:none; color:#94A3B8; font-size:26px; cursor:pointer; line-height:1; padding:0 5px;">&times;</button>
-                        </div>
-                        <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5; text-align:center;">Press and hold (long-press) the image below to save it directly to your Photos or Gallery.</p>
-                        <img src="${dataUrl}" alt="Membership Agreement" style="width:100%; border-radius:8px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 15px 30px rgba(0,0,0,0.5); -webkit-touch-callout:default; pointer-events:auto;" />
-                        <button class="close-overlay-btn-bottom" style="padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
-                    </div>
-                `;
+        //         overlay.innerHTML = `
+        //             <div style="width:100%; max-width:440px; background:rgba(30, 41, 59, 0.7); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:15px; color:#fff; font-family:'Outfit', sans-serif; box-shadow:0 30px 60px rgba(0,0,0,0.6); box-sizing:border-box; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+        //                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+        //                     <span style="font-weight:700; font-size:16px; color:#10B981; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-file-invoice"></i> Agreement Ready</span>
+        //                     <button class="close-overlay-btn" style="background:none; border:none; color:#94A3B8; font-size:26px; cursor:pointer; line-height:1; padding:0 5px;">&times;</button>
+        //                 </div>
+        //                 <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5; text-align:center;">Press and hold (long-press) the image below to save it directly to your Photos or Gallery.</p>
+        //                 <img src="${dataUrl}" alt="Membership Agreement" style="width:100%; border-radius:8px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 15px 30px rgba(0,0,0,0.5); -webkit-touch-callout:default; pointer-events:auto;" />
+        //                 <button class="close-overlay-btn-bottom" style="padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
+        //             </div>
+        //         `;
                 
-                document.body.appendChild(overlay);
+        //         document.body.appendChild(overlay);
                 
-                // Add event listeners to close the overlay preview
-                const closeBtn = overlay.querySelector('.close-overlay-btn');
-                const closeBtnBottom = overlay.querySelector('.close-overlay-btn-bottom');
+        //         // Add event listeners to close the overlay preview
+        //         const closeBtn = overlay.querySelector('.close-overlay-btn');
+        //         const closeBtnBottom = overlay.querySelector('.close-overlay-btn-bottom');
                 
-                const removeOverlay = () => {
-                    overlay.remove();
-                };
+        //         const removeOverlay = () => {
+        //             overlay.remove();
+        //         };
                 
-                closeBtn.addEventListener('click', removeOverlay);
-                closeBtnBottom.addEventListener('click', removeOverlay);
-            } else {
-                // Desktop browser: standard programmatic download anchor
-                const link = document.createElement('a');
-                link.download = `Tristar_Membership_Agreement_${details.membership_id}.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        };
+        //         closeBtn.addEventListener('click', removeOverlay);
+        //         closeBtnBottom.addEventListener('click', removeOverlay);
+        //     } else {
+        //         // Desktop browser: standard programmatic download anchor
+        //         const link = document.createElement('a');
+        //         link.download = `Tristar_Membership_Agreement_${details.membership_id}.png`;
+        //         link.href = dataUrl;
+        //         document.body.appendChild(link);
+        //         link.click();
+        //         document.body.removeChild(link);
+        //     }
+        // };
 
         function handleBeforeUnload(e) {
             e.preventDefault();

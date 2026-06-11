@@ -40,6 +40,15 @@ function initBookingPage() {
     if (cancelConfirmBtn) {
         cancelConfirmBtn.addEventListener('click', processCancellationSubmit);
     }
+
+    const paymentMethodModal = document.getElementById('modal-payment-method');
+    if (paymentMethodModal) {
+        paymentMethodModal.addEventListener('click', (e) => {
+            if (e.target === paymentMethodModal) {
+                closePaymentMethodModal();
+            }
+        });
+    }
 }
 
 // Time Formatter for 12 hours representation
@@ -90,6 +99,7 @@ function loadLiveSlots() {
         .then(data => {
             loadingSpinner.classList.add('hidden');
             if (data.success) {
+                slotsGrid.innerHTML = '';
                 if (data.slots.length === 0) {
                     slotsGrid.innerHTML = '<div class="dashboard-empty-state"><i class="fa-solid fa-face-frown"></i><p>No slots found for this court configuration.</p></div>';
                     return;
@@ -317,7 +327,7 @@ function preBookSlotAndShowPaymentMethod() {
     });
 }
 
-function cancelPreBooking(bookingId) {
+function cancelPreBooking(bookingId, showNotification = false) {
     if (!bookingId) return;
     fetch('/api/cancel', {
         method: 'POST',
@@ -326,6 +336,9 @@ function cancelPreBooking(bookingId) {
     })
     .then(res => res.json())
     .then(data => {
+        if (showNotification) {
+            window.showToast("Booking cancelled. Slot not booked.", "warning");
+        }
         loadLiveSlots();
     })
     .catch(err => console.error("Error releasing slot:", err));
@@ -334,7 +347,7 @@ function cancelPreBooking(bookingId) {
 // Payment Selection Modal Handlers
 function closePaymentMethodModal() {
     if (currentBookingId) {
-        cancelPreBooking(currentBookingId);
+        cancelPreBooking(currentBookingId, true);
     }
     document.getElementById('modal-payment-method').classList.add('hidden');
     // Hide confirm modal too since reservation was cancelled
@@ -392,7 +405,7 @@ function confirmOfflineBooking() {
             loadLiveSlots();
         } else {
             window.showToast(data.message || "Failed to complete booking.", 'error');
-            cancelPreBooking(currentBookingId);
+            cancelPreBooking(currentBookingId, true);
             currentBookingId = null;
             selectedSlotId = null;
         }
@@ -405,7 +418,7 @@ function confirmOfflineBooking() {
         console.error("Error confirming offline booking:", err);
         window.showToast("Request timed out.", 'error');
         if (currentBookingId) {
-            cancelPreBooking(currentBookingId);
+            cancelPreBooking(currentBookingId, true);
             currentBookingId = null;
             selectedSlotId = null;
         }

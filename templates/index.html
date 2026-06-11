@@ -100,6 +100,12 @@
                     <p>Reserve your preferred daily time slot for the entire subscription period instantly. You can also contact our manager Paularun directly for corporate queries.</p>
                     
                     <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn-book-slot-cta pulse" style="border: none; width: 100%; display: flex; justify-content: center;">
+                            <i class="fa-solid fa-crown"></i> Contact the Manager and join the WhatsApp membership group
+                        </button>
+                    </div>
+
+                    <!-- <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px;">
                         {% if user %}
                             <button class="btn-book-slot-cta pulse" style="border: none; width: 100%; display: flex; justify-content: center;" onclick="openMembershipModal()">
                                 <i class="fa-solid fa-crown"></i> Book Membership Online Now
@@ -109,7 +115,7 @@
                                 <i class="fa-solid fa-right-to-bracket"></i> Login to Book Membership
                             </a>
                         {% endif %}
-                    </div>
+                    </div> -->
                 </div>
                 <div class="highlight-contact-details" style="display: flex; flex-direction: column; justify-content: center; gap: 15px;">
                     <div class="contact-card">
@@ -228,7 +234,7 @@
         </div>
     </section>
     
-    <!-- BOOK MEMBERSHIP MODAL -->
+    {# <!-- BOOK MEMBERSHIP MODAL -->
     <div class="modal-overlay hidden" id="modal-book-membership">
         <div class="modal-card glass-card slide-up">
             <div class="modal-header" style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
@@ -302,7 +308,7 @@
             </form>
         </div>
     </div>
-</div>
+</div> #}
 {% endblock %}
 
 {% block extra_js %}
