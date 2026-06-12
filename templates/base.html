@@ -115,7 +115,7 @@
     <div class="toast-container" id="toast-root"></div>
 
     <!-- UPI PAYMENT MODAL -->
-    <div class="modal-overlay hidden" id="modal-upi-payment" style="z-index: 10001; padding: 10px;">
+{#    <div class="modal-overlay hidden" id="modal-upi-payment" style="z-index: 10001; padding: 10px;">
         <div class="modal-card glass-card slide-up" style="max-width: 350px; margin: auto; max-height: 95vh; overflow: hidden; display: flex; flex-direction: column;">
             <div class="modal-header" style="padding: 12px 15px;">
                 <h3 style="font-size: 16px;"><i class="fa-solid fa-qrcode text-accent"></i> UPI Payment</h3>
@@ -163,7 +163,7 @@
                 </button>
             </div>
         </div>
-    </div>
+    </div> #}
 
     <!-- Background In-App Alerts Banner -->
     {% if user %}
@@ -595,15 +595,39 @@
                 promptOverlay.classList.remove('hidden');
                 
                 yesBtn.onclick = () => {
-                    clearState();
-                    // Set success flags only at the moment of redirect to avoid pre-redirect refresh cleanup
-                    sessionStorage.setItem('booking_success_msg', successMessage || 'Booking confirmed!');
-                    if (agreementDetails) {
-                        sessionStorage.setItem('pending_membership_agreement', typeof agreementDetails === 'string' ? agreementDetails : JSON.stringify(agreementDetails));
-                    }
-                    promptOverlay.classList.add('hidden');
-                    modal.classList.add('hidden');
-                    window.location.href = redirectUrl;
+                    yesBtn.disabled = true;
+                    const originalHtml = yesBtn.innerHTML;
+                    yesBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Confirming...';
+                    
+                    fetch('/api/book/confirm-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ booking_id: bookingId })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        yesBtn.disabled = false;
+                        yesBtn.innerHTML = originalHtml;
+                        if (data.success) {
+                            clearState();
+                            // Set success flags only at the moment of redirect to avoid pre-redirect refresh cleanup
+                            sessionStorage.setItem('booking_success_msg', successMessage || 'Booking confirmed!');
+                            if (agreementDetails) {
+                                sessionStorage.setItem('pending_membership_agreement', typeof agreementDetails === 'string' ? agreementDetails : JSON.stringify(agreementDetails));
+                            }
+                            promptOverlay.classList.add('hidden');
+                            modal.classList.add('hidden');
+                            window.location.href = redirectUrl;
+                        } else {
+                            window.showToast(data.message || "Failed to confirm payment.", 'error');
+                        }
+                    })
+                    .catch(err => {
+                        yesBtn.disabled = false;
+                        yesBtn.innerHTML = originalHtml;
+                        console.error("Error confirming payment:", err);
+                        window.showToast("Failed to confirm payment due to network timeout.", 'error');
+                    });
                 };
                 
                 noBtn.onclick = () => {

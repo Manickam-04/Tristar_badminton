@@ -39,6 +39,32 @@ def start_backup_scheduler():
 
 start_backup_scheduler()
 
+# --- Background Unpaid Booking Cleanup Scheduler ---
+def start_booking_cleanup_scheduler():
+    import threading
+    import time
+    def cleanup_worker():
+        # Sleep a short period to allow the process to boot fully
+        time.sleep(15)
+        while True:
+            try:
+                conn = database.get_db_connection()
+                # Delete bookings in 'pending_payment' status created more than 5 minutes ago
+                conn.execute(
+                    "DELETE FROM bookings WHERE status = 'pending_payment' AND created_at < NOW() - INTERVAL '5 minutes'"
+                )
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(f"Error in booking cleanup scheduler thread: {e}")
+            # Check every 60 seconds
+            time.sleep(60)
+            
+    thread = threading.Thread(target=cleanup_worker, daemon=True)
+    thread.start()
+
+start_booking_cleanup_scheduler()
+
 @app.route('/api/cron/backup')
 def api_cron_backup():
     """Secure endpoint triggered by Vercel Cron to run database backups."""
@@ -362,9 +388,9 @@ def api_get_slots():
         # Fetch all slot templates for this court (sorted chronologically)
         slots = conn.execute("SELECT * FROM slots WHERE court_id = ? ORDER BY start_time ASC", (court_id,)).fetchall()
         
-        # Fetch confirmed bookings for this date and court
+        # Fetch confirmed or pending_payment bookings for this date and court
         bookings_rows = conn.execute(
-            "SELECT * FROM bookings WHERE court_id = ? AND booking_date = ? AND status = 'confirmed'",
+            "SELECT * FROM bookings WHERE court_id = ? AND booking_date = ? AND status IN ('confirmed', 'pending_payment')",
             (court_id, date_str)
         ).fetchall()
         bookings_dict = {b['slot_id']: b for b in bookings_rows}
@@ -422,10 +448,11 @@ def api_get_slots():
                 booking = bookings_dict[slot_id]
                 booking_id = booking['id']
                 num_members = booking['num_members']
-                
-                # Fetch name of the user who booked
                 booker_id = booking['user_id']
-                if user_or_err and booker_id == user_or_err['id']:
+                
+                if booking['status'] == 'pending_payment':
+                    status = 'booked'
+                elif user_or_err and booker_id == user_or_err['id']:
                     status = 'booked_by_me'
                 else:
                     status = 'booked'
@@ -497,9 +524,7 @@ def api_book_slot():
     slot_id = data.get('slot_id')
     date_str = data.get('date', '').strip()
     num_members = int(data.get('num_members', 1))
-    payment_method = data.get('payment_method', 'online').strip().lower()
-    if payment_method not in ('online', 'offline'):
-        payment_method = 'online'
+    payment_method = 'offline'
     
     if not court_id or not slot_id or not date_str:
         return jsonify({'success': False, 'message': 'Court ID, Slot ID, and Date are required.'}), 400
@@ -580,10 +605,11 @@ def api_book_slot():
             total_price = price_per_person * num_members
         
         # 4. Insert booking
+        initial_status = 'pending_payment'
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO bookings (user_id, court_id, slot_id, booking_date, num_slots, num_members, total_price, status, payment_method) VALUES (?, ?, ?, ?, 1, ?, ?, 'confirmed', ?)",
-            (user['id'], court_id, slot_id, date_str, num_members, total_price, payment_method)
+            "INSERT INTO bookings (user_id, court_id, slot_id, booking_date, num_slots, num_members, total_price, status, payment_method) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)",
+            (user['id'], court_id, slot_id, date_str, num_members, total_price, initial_status, payment_method)
         )
         
         # Commit will unlock database
@@ -634,12 +660,48 @@ def api_update_booking_payment_method():
         if booking['user_id'] != user['id'] and user['role'] != 'admin':
             return jsonify({'success': False, 'message': 'Unauthorized.'}), 403
             
+        new_status = 'confirmed' if payment_method == 'offline' else 'pending_payment'
         conn.execute(
-            "UPDATE bookings SET payment_method = ? WHERE id = ?",
-            (payment_method, booking_id)
+            "UPDATE bookings SET payment_method = ?, status = ? WHERE id = ?",
+            (payment_method, new_status, booking_id)
         )
         conn.commit()
         return jsonify({'success': True, 'message': 'Payment method updated successfully.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/book/confirm-payment', methods=['POST'])
+def api_confirm_payment():
+    authorized, user = login_required()
+    if not authorized:
+        return jsonify({'success': False, 'message': user}), 401
+        
+    data = request.get_json() or {}
+    booking_id = data.get('booking_id')
+    
+    if not booking_id:
+        return jsonify({'success': False, 'message': 'Booking ID is required.'}), 400
+        
+    conn = database.get_db_connection()
+    try:
+        booking = conn.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
+        if not booking:
+            return jsonify({'success': False, 'message': 'Booking not found.'}), 404
+            
+        if booking['user_id'] != user['id'] and user['role'] != 'admin':
+            return jsonify({'success': False, 'message': 'Unauthorized.'}), 403
+            
+        if booking['status'] != 'pending_payment':
+            return jsonify({'success': True, 'message': 'Payment already confirmed.'})
+            
+        conn.execute(
+            "UPDATE bookings SET status = 'confirmed' WHERE id = ?",
+            (booking_id,)
+        )
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Payment confirmed successfully!'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
     finally:
@@ -984,16 +1046,25 @@ def api_cancel_booking():
                 return jsonify({'success': False, 'message': 'Booking is already cancelled.'}), 400
                 
             payment_method = booking['payment_method']
-            conn.execute(
-                "UPDATE bookings SET status = 'cancelled', cancelled_at = ? WHERE id = ?", 
-                (get_local_now().strftime('%Y-%m-%d %H:%M:%S'), booking_id)
-            )
-            conn.commit()
-            return jsonify({
-                'success': True, 
-                'message': 'Booking cancelled successfully.',
-                'payment_method': payment_method
-            })
+            if booking['status'] == 'pending_payment':
+                conn.execute("DELETE FROM bookings WHERE id = ?", (booking_id,))
+                conn.commit()
+                return jsonify({
+                    'success': True, 
+                    'message': 'Pending booking released successfully.',
+                    'payment_method': payment_method
+                })
+            else:
+                conn.execute(
+                    "UPDATE bookings SET status = 'cancelled', cancelled_at = ? WHERE id = ?", 
+                    (get_local_now().strftime('%Y-%m-%d %H:%M:%S'), booking_id)
+                )
+                conn.commit()
+                return jsonify({
+                    'success': True, 
+                    'message': 'Booking cancelled successfully.',
+                    'payment_method': payment_method
+                })
             
     except Exception as e:
         conn.rollback()
@@ -1019,7 +1090,7 @@ def api_bookings_history():
             FROM bookings b
             JOIN courts c ON b.court_id = c.id
             JOIN slots s ON b.slot_id = s.id
-            WHERE b.user_id = ?
+            WHERE b.user_id = ? AND b.status != 'pending_payment'
             ORDER BY b.booking_date DESC, s.start_time ASC
             """, (user['id'],)
         ).fetchall()
@@ -1384,6 +1455,7 @@ def admin_api_bookings():
             JOIN courts c ON b.court_id = c.id
             JOIN slots s ON b.slot_id = s.id
             JOIN users u ON b.user_id = u.id
+            WHERE b.status != 'pending_payment'
             ORDER BY b.booking_date DESC, s.start_time ASC
             """
         ).fetchall()

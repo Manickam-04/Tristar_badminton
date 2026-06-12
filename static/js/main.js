@@ -49,6 +49,22 @@ function initBookingPage() {
             }
         });
     }
+
+    // Immediately cancel pending booking if the window is closed, reloaded, or navigated away from
+    const handleUnload = () => {
+        if (currentBookingId) {
+            const bookingIdToCancel = currentBookingId;
+            currentBookingId = null; // Clear immediately to prevent duplicate requests
+            fetch('/api/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ booking_id: bookingIdToCancel }),
+                keepalive: true
+            });
+        }
+    };
+    window.addEventListener('pagehide', handleUnload);
+    window.addEventListener('beforeunload', handleUnload);
 }
 
 // Time Formatter for 12 hours representation
@@ -282,7 +298,7 @@ function preBookSlotAndShowPaymentMethod() {
         slot_id: selectedSlotId,
         date: dateVal,
         num_members: playersCount,
-        payment_method: 'online' // Default starting method
+        payment_method: 'offline' // Default starting method
     };
 
     fetch('/api/book', {
@@ -359,13 +375,7 @@ function closePaymentMethodModal() {
 function selectPaymentMethod(method) {
     if (isBookingProcessing || !currentBookingId) return;
 
-    if (method === 'online') {
-        document.getElementById('modal-payment-method').classList.add('hidden');
-        closeBookingModal('confirm');
-        window.showUPIPaymentModal(currentBookingPrice, '/profile', currentBookingId, null, null, "Slot booked successfully!");
-        currentBookingId = null;
-        selectedSlotId = null;
-    } else if (method === 'offline') {
+    if (method === 'offline') {
         document.getElementById('modal-payment-method').classList.add('hidden');
         document.getElementById('modal-confirm-offline').classList.remove('hidden');
     }
