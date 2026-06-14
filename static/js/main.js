@@ -51,20 +51,39 @@ function initBookingPage() {
     }
 
     // Immediately cancel pending booking if the window is closed, reloaded, or navigated away from
+    let hasSentCancel = false;
     const handleUnload = () => {
-        if (currentBookingId) {
+        if (currentBookingId && !hasSentCancel) {
             const bookingIdToCancel = currentBookingId;
+            hasSentCancel = true;
             currentBookingId = null; // Clear immediately to prevent duplicate requests
-            fetch('/api/cancel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ booking_id: bookingIdToCancel }),
-                keepalive: true
-            });
+            
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify({ booking_id: bookingIdToCancel })], { type: 'application/json' });
+                navigator.sendBeacon('/api/cancel', blob);
+            } else {
+                fetch('/api/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: bookingIdToCancel }),
+                    keepalive: true
+                });
+            }
         }
     };
     window.addEventListener('pagehide', handleUnload);
     window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('unload', handleUnload);
+
+    // Auto-refresh the slots grid every 5 seconds for real-time updates
+    const pollInterval = setInterval(() => {
+        if (document.getElementById('slots-grid') && document.visibilityState === 'visible') {
+            loadLiveSlots(true);
+        }
+    }, 2500);
+
+    window.addEventListener('pagehide', () => clearInterval(pollInterval));
+    window.addEventListener('unload', () => clearInterval(pollInterval));
 }
 
 // Time Formatter for 12 hours representation
@@ -89,7 +108,7 @@ function formatSingleTime(singleTimeStr) {
 }
 
 // Fetch available slots from backend
-function loadLiveSlots() {
+function loadLiveSlots(isSilent = false) {
     const datePicker = document.getElementById('booking-date-picker');
     const courtSelect = document.getElementById('booking-court-select');
     const slotsGrid = document.getElementById('slots-grid');
@@ -106,106 +125,117 @@ function loadLiveSlots() {
     const dateObj = new Date(dateVal);
     activeDateLabel.innerText = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
-    // Show spinner
-    loadingSpinner.classList.remove('hidden');
-    slotsGrid.innerHTML = '';
+    // Show spinner and clear only if not silent
+    if (!isSilent) {
+        loadingSpinner.classList.remove('hidden');
+        slotsGrid.innerHTML = '';
+    }
 
     fetch(`/api/slots?date=${dateVal}&court_id=${courtVal}`)
         .then(res => res.json())
         .then(data => {
-            loadingSpinner.classList.add('hidden');
+            if (!isSilent) {
+                loadingSpinner.classList.add('hidden');
+            }
             if (data.success) {
-                slotsGrid.innerHTML = '';
+                const tempContainer = document.createDocumentFragment();
                 if (data.slots.length === 0) {
-                    slotsGrid.innerHTML = '<div class="dashboard-empty-state"><i class="fa-solid fa-face-frown"></i><p>No slots found for this court configuration.</p></div>';
-                    return;
-                }
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'dashboard-empty-state';
+                    emptyState.innerHTML = '<i class="fa-solid fa-face-frown"></i><p>No slots found for this court configuration.</p>';
+                    tempContainer.appendChild(emptyState);
+                } else {
+                    // Check if selected date is a weekend (0 = Sunday, 6 = Saturday)
+                    const partsVal = dateVal.split('-');
+                    const dateObjVal = new Date(partsVal[0], partsVal[1] - 1, partsVal[2]);
+                    const isWeekendVal = (dateObjVal.getDay() === 0 || dateObjVal.getDay() === 6);
 
-                // Check if selected date is a weekend (0 = Sunday, 6 = Saturday)
-                const partsVal = dateVal.split('-');
-                const dateObjVal = new Date(partsVal[0], partsVal[1] - 1, partsVal[2]);
-                const isWeekendVal = (dateObjVal.getDay() === 0 || dateObjVal.getDay() === 6);
-
-                data.slots.forEach(slot => {
-                    const slotCard = document.createElement('div');
-                    
-                    // Style by status
-                    slotCard.className = `slot-box status-${slot.status}`;
-                    
-                    let badgeLabel = 'Available';
-                    let priceText = isWeekendVal ? `₹${slot.price} flat` : `₹${slot.price}/person`;
-                    let clickHandler = '';
-
-                    const timeRangeFormatted = `${formatTimeTo12Hour(slot.start_time)} - ${formatTimeTo12Hour(slot.end_time)}`;
-
-                    let isSlotPast = false;
-                    let isSlotStarted = false;
-                    try {
-                        const startDt = new Date(`${dateVal}T${slot.start_time}:00+05:30`);
-                        let endDt = new Date(`${dateVal}T${slot.end_time}:00+05:30`);
+                    data.slots.forEach(slot => {
+                        const slotCard = document.createElement('div');
                         
-                        // Handle overnight slots (e.g. 11:00 PM to 01:00 AM)
-                        if (endDt <= startDt) {
-                            endDt.setDate(endDt.getDate() + 1);
-                        }
+                        // Style by status
+                        slotCard.className = `slot-box status-${slot.status}`;
                         
-                        const now = new Date();
-                        if (now >= startDt) {
-                            isSlotStarted = true;
-                        }
-                        if (now >= endDt) {
-                            isSlotPast = true;
-                        }
-                    } catch (e) {
-                        console.error("Error parsing slot time", e);
-                    }
+                        let badgeLabel = 'Available';
+                        let priceText = isWeekendVal ? `₹${slot.price} flat` : `₹${slot.price}/person`;
+                        let clickHandler = '';
 
-                    if (slot.status === 'blocked') {
-                        badgeLabel = slot.block_reason || 'Blocked';
-                        priceText = '—';
-                    } else if (slot.status === 'expired' || (isSlotPast && slot.status === 'available')) {
-                        badgeLabel = 'Expired';
-                        priceText = '—';
-                        clickHandler = '';
-                        slotCard.className = `slot-box status-expired`;
-                    } else if (slot.status === 'booked_by_me') {
-                        badgeLabel = 'Your Session';
-                        if (isSlotStarted) {
+                        const timeRangeFormatted = `${formatTimeTo12Hour(slot.start_time)} - ${formatTimeTo12Hour(slot.end_time)}`;
+
+                        let isSlotPast = false;
+                        let isSlotStarted = false;
+                        try {
+                            const startDt = new Date(`${dateVal}T${slot.start_time}:00+05:30`);
+                            let endDt = new Date(`${dateVal}T${slot.end_time}:00+05:30`);
+                            
+                            // Handle overnight slots (e.g. 11:00 PM to 01:00 AM)
+                            if (endDt <= startDt) {
+                                endDt.setDate(endDt.getDate() + 1);
+                            }
+                            
+                            const now = new Date();
+                            if (now >= startDt) {
+                                isSlotStarted = true;
+                            }
+                            if (now >= endDt) {
+                                isSlotPast = true;
+                            }
+                        } catch (e) {
+                            console.error("Error parsing slot time", e);
+                        }
+
+                        if (slot.status === 'blocked') {
+                            badgeLabel = slot.block_reason || 'Blocked';
+                            priceText = '—';
+                        } else if (slot.status === 'expired' || (isSlotPast && slot.status === 'available')) {
+                            badgeLabel = 'Expired';
+                            priceText = '—';
                             clickHandler = '';
-                            slotCard.style.cursor = 'default';
-                            slotCard.style.opacity = '0.85';
+                            slotCard.className = `slot-box status-expired`;
+                        } else if (slot.status === 'booked_by_me') {
+                            badgeLabel = 'Your Session';
+                            if (isSlotStarted) {
+                                clickHandler = '';
+                                slotCard.style.cursor = 'default';
+                                slotCard.style.opacity = '0.85';
+                            } else {
+                                clickHandler = `openCancelModal(${slot.booking_id}, '${courtName}', '${dateVal}', '${timeRangeFormatted}')`;
+                            }
+                        } else if (slot.status === 'booked') {
+                            badgeLabel = 'Booked';
+                            priceText = 'Filled';
                         } else {
-                            clickHandler = `onclick="openCancelModal(${slot.booking_id}, '${courtName}', '${dateVal}', '${timeRangeFormatted}')"`;
+                            // Available and not past
+                            clickHandler = `openBookingModal(${slot.slot_id}, '${courtName}', '${dateVal}', '${timeRangeFormatted}', ${slot.price})`;
                         }
-                    } else if (slot.status === 'booked') {
-                        badgeLabel = 'Booked';
-                        priceText = 'Filled';
-                    } else {
-                        // Available and not past
-                        clickHandler = `onclick="openBookingModal(${slot.slot_id}, '${courtName}', '${dateVal}', '${timeRangeFormatted}', ${slot.price})"`;
-                    }
 
-                    slotCard.innerHTML = `
-                        <span class="slot-box-time"><i class="fa-regular fa-clock text-accent"></i> ${timeRangeFormatted}</span>
-                        <span class="slot-box-price">${priceText}</span>
-                        <span class="slot-box-status">${badgeLabel}</span>
-                    `;
-                    
-                    if (clickHandler) {
-                        slotCard.setAttribute('onclick', slotCard.getAttribute('onclick') || '');
-                        slotCard.onclick = new Function(clickHandler.replace('onclick=', '').replace(/"/g, ''));
-                    }
+                        slotCard.innerHTML = `
+                            <span class="slot-box-time"><i class="fa-regular fa-clock text-accent"></i> ${timeRangeFormatted}</span>
+                            <span class="slot-box-price">${priceText}</span>
+                            <span class="slot-box-status">${badgeLabel}</span>
+                        `;
+                        
+                        if (clickHandler) {
+                            slotCard.onclick = new Function(clickHandler);
+                        }
 
-                    slotsGrid.appendChild(slotCard);
-                });
+                        tempContainer.appendChild(slotCard);
+                    });
+                }
+                slotsGrid.innerHTML = '';
+                slotsGrid.appendChild(tempContainer);
             } else {
-                window.showToast(data.message || "Failed to load slots availability.", 'error');
+                if (!isSilent) {
+                    window.showToast(data.message || "Failed to load slots availability.", 'error');
+                }
             }
         })
         .catch(err => {
-            loadingSpinner.classList.add('hidden');
-            console.error("Error loading slots:", err);
-            window.showToast("Connection to court API failed.", 'error');
+            if (!isSilent) {
+                loadingSpinner.classList.add('hidden');
+                console.error("Error loading slots:", err);
+                window.showToast("Connection to court API failed.", 'error');
+            }
         });
 }
 

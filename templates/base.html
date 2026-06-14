@@ -93,7 +93,7 @@
                     </a>
                 {% endif %}
                 
-                <a href="{{ url_for('logout') }}" class="menu-item logout-item">
+                <a href="#" class="menu-item logout-item" onclick="return showSignOutModal(event)">
                     <i class="fa-solid fa-right-from-bracket"></i> <span>Sign Out</span>
                 </a>
             {% else %}
@@ -164,6 +164,26 @@
             </div>
         </div>
     </div> #}
+
+    <!-- SIGN OUT CONFIRMATION MODAL -->
+    <div class="modal-overlay hidden" id="modal-signout-confirm" style="z-index: 10006;">
+        <div class="modal-card glass-card slide-up" style="max-width: 380px; padding: 25px; text-align: center; border: 1px solid var(--border-color); box-sizing: border-box;">
+            <h3 style="margin-top: 0; font-size: 20px; color: var(--text-primary); display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Outfit', sans-serif;">
+                <i class="fa-solid fa-circle-question text-accent"></i> Confirm Sign Out
+            </h3>
+            <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin: 15px 0 25px 0; font-family: 'Plus Jakarta Sans', sans-serif;">
+                Are you sure you want to sign out from your Tristar Badminton account?
+            </p>
+            <div style="display: flex; gap: 12px; width: 100%;">
+                <button id="btn-signout-cancel" class="btn-modal-cancel" style="flex: 1; justify-content: center; margin: 0; padding: 10px 16px; font-family: 'Outfit', sans-serif; font-weight: 700; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: transparent; color: #ffffff; cursor: pointer; transition: all 0.2s;">
+                    Cancel
+                </button>
+                <a href="{{ url_for('logout') }}" id="btn-signout-confirm" class="btn-modal-confirm" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; margin: 0; padding: 10px 16px; font-family: 'Outfit', sans-serif; font-weight: 700; border-radius: var(--radius-sm); border: none; background: #EF4444; color: #ffffff; text-decoration: none; cursor: pointer; transition: all 0.2s;">
+                    Sign Out
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Background In-App Alerts Banner -->
     {% if user %}
@@ -894,6 +914,41 @@
             });
         }
         {% endif %}
+
+        // Sign Out Confirmation Modal Toggle
+        window.showSignOutModal = function(e) {
+            if (e) {
+                e.preventDefault();
+            }
+            const modal = document.getElementById('modal-signout-confirm');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+            return false;
+        };
+
+        window.closeSignOutModal = function() {
+            const modal = document.getElementById('modal-signout-confirm');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cancelBtn = document.getElementById('btn-signout-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', window.closeSignOutModal);
+            }
+            
+            const modal = document.getElementById('modal-signout-confirm');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        window.closeSignOutModal();
+                    }
+                });
+            }
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

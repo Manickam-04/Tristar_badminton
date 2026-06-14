@@ -1,46 +1,48 @@
-# 🏸 Badminton Slot Booking Application
+# 🏸 Tristar Badminton Academy - Court Slot Booking Portal
 
-A Flask-based web application for managing badminton court slot bookings.
+A high-performance, mobile-first web application for badminton court slot bookings. Built with a sleek dark-theme glassmorphism design system.
 
-## Features
+## 🚀 Key Features
 
-- User Registration & Login
-- Slot Booking Management
-- Booking History
-- Admin Dashboard
-- SQLite Database
+* **Google OAuth 2.0 Authentication**: Standard users sign in exclusively with Google OAuth. Sessions are kept permanent to prevent auto-logouts.
+* **Onboarding & Profile Setup**: A one-time Profile Setup flow immediately prompts new users to configure their Full Name and verified 10-digit Mobile Number.
+* **Mobile-First Slot Grid**: Dynamic hourly grid displaying available, booked, and expired court slots in real-time.
+* **Pay After Play (Offline Booking)**: Straightforward court booking flow with immediate confirmation and email-based booking record matching.
+* **Administrative Portal**: Secure dashboard at `/admin/login` (using traditional credentials) to configure court slots, price overrides, specific date blockages, review user queries, and view booking logs.
+* **Auto-Cleanup Daemon**: A background thread that automatically cleans up unconfirmed or pending booking slots after 5 minutes.
+* **Cross-Platform Mobile Responsiveness**: Optimizations for mobile browsers, including horizontal scroll logs and custom Sign Out confirmation overlay modals.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- Flask
-- Python
-- SQLite
-- HTML/CSS/JavaScript
+* **Backend**: Python (Flask)
+* **Database**: PostgreSQL (Neon Database)
+* **Frontend**: HTML5, CSS3 (Vanilla Glassmorphism Theme), JavaScript (ES6)
+* **Hosting / Deployment**: Vercel Serverless Ready
 
-## Project Structure
+## ⚙️ How to Run Locally
 
-```text
-badminton-slot-booking/
-│
-├── static/
-├── templates/
-├── app.py
-├── requirements.txt
-├── bookings.db
-└── README.md
-```
-
-## Run Locally
-
+### Step 1: Install Dependencies
+Install the required packages from `requirements.txt`:
 ```bash
 pip install -r requirements.txt
-python app.py
 ```
 
-## Live Demo
+### Step 2: Configure Environment Variables
+Create a local `.env` file in the root directory:
+```env
+DATABASE_URL="your-postgresql-url"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+SECRET_KEY="your-session-secret-key"
+```
 
-tristarbadminton.up.railway.app
+### Step 3: Start the Server
+Start the Flask development server:
+```bash
+python app.py
+```
+Access the application at `http://127.0.0.1:5000`.
 
-## Developer
+## 🧑‍💻 Developer
 
 Manicka Vinayagam

@@ -1,4 +1,8 @@
 import os
+import urllib.request
+import urllib.parse
+import json
+import secrets
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -141,6 +145,22 @@ def ensure_session_permanence():
     if 'user_id' in session:
         session.permanent = True
 
+@app.before_request
+def check_profile_setup():
+    """Ensure that standard users with incomplete profiles (no mobile) are redirect-guarded."""
+    if request.path.startswith('/static') or request.path in ('/profile-setup', '/api/auth/profile-setup', '/logout', '/login/google', '/api/auth/callback'):
+        return
+        
+    user = get_current_user()
+    if user and user['role'] == 'user' and not user['mobile']:
+        session['pending_google_user'] = {
+            'email': user['email'],
+            'name': user['name'],
+            'sub': session.get('google_sub')
+        }
+        session.pop('user_id', None)
+        return redirect(url_for('profile_setup_page'))
+
 # --- Page Render Routes ---
 @app.route('/')
 def home():
@@ -165,7 +185,225 @@ def login_page():
     if get_current_user():
         next_url = request.args.get('next', url_for('home'))
         return redirect(next_url)
+        
+    next_param = request.args.get('next')
+    if next_param:
+        session['next_url'] = next_param
+    else:
+        session.pop('next_url', None)
+        
     return render_template('login.html')
+
+# --- GOOGLE OAUTH ROUTES ---
+@app.route('/login/google')
+def login_google():
+    if get_current_user():
+        return redirect(url_for('home'))
+        
+    state = secrets.token_urlsafe(16)
+    session['oauth_state'] = state
+    
+    redirect_uri = url_for('api_auth_callback', _external=True)
+    if 'localhost' in redirect_uri:
+        redirect_uri = redirect_uri.replace('localhost', '127.0.0.1')
+    
+    # Respect the protocol forwarded by reverse proxies (like Vercel)
+    proto = request.headers.get('X-Forwarded-Proto')
+    if proto:
+        if redirect_uri.startswith('http://') and proto == 'https':
+            redirect_uri = redirect_uri.replace('http://', 'https://', 1)
+    else:
+        # Local development (no proxy): enforce http scheme if request is not secure
+        if not request.is_secure and redirect_uri.startswith('https://'):
+            redirect_uri = redirect_uri.replace('https://', 'http://', 1)
+        
+    params = {
+        'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+        'prompt': 'select_account'
+    }
+    auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urllib.parse.urlencode(params)
+    return redirect(auth_url)
+
+@app.route('/api/auth/callback')
+def api_auth_callback():
+    error = request.args.get('error')
+    if error:
+        return redirect(url_for('login_page', error=f"Google Error: {error}"))
+        
+    state = request.args.get('state')
+    saved_state = session.pop('oauth_state', None)
+    if not state or state != saved_state:
+        return redirect(url_for('login_page', error="Invalid state token (CSRF protection failed)."))
+        
+    code = request.args.get('code')
+    if not code:
+        return redirect(url_for('login_page', error="No authorization code returned."))
+        
+    redirect_uri = url_for('api_auth_callback', _external=True)
+    if 'localhost' in redirect_uri:
+        redirect_uri = redirect_uri.replace('localhost', '127.0.0.1')
+    
+    # Respect the protocol forwarded by reverse proxies (like Vercel)
+    proto = request.headers.get('X-Forwarded-Proto')
+    if proto:
+        if redirect_uri.startswith('http://') and proto == 'https':
+            redirect_uri = redirect_uri.replace('http://', 'https://', 1)
+    else:
+        # Local development (no proxy): enforce http scheme if request is not secure
+        if not request.is_secure and redirect_uri.startswith('https://'):
+            redirect_uri = redirect_uri.replace('https://', 'http://', 1)
+        
+    payload = {
+        'code': code,
+        'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+        'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code'
+    }
+    
+    try:
+        data = urllib.parse.urlencode(payload).encode('utf-8')
+        req = urllib.request.Request('https://oauth2.googleapis.com/token', data=data, method='POST')
+        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        
+        with urllib.request.urlopen(req) as response:
+            token_data = json.loads(response.read().decode('utf-8'))
+            
+        access_token = token_data.get('access_token')
+        if not access_token:
+            return redirect(url_for('login_page', error="Failed to retrieve access token."))
+            
+        info_req = urllib.request.Request('https://www.googleapis.com/oauth2/v3/userinfo')
+        info_req.add_header('Authorization', f"Bearer {access_token}")
+        
+        with urllib.request.urlopen(info_req) as response:
+            user_info = json.loads(response.read().decode('utf-8'))
+            
+        sub = user_info.get('sub')
+        email = user_info.get('email')
+        name = user_info.get('name', 'Google User')
+        
+        if not email or not sub:
+            return redirect(url_for('login_page', error="Failed to retrieve unique user info from Google."))
+            
+        conn = database.get_db_connection()
+        
+        # Check by google_sub
+        db_user = conn.execute("SELECT * FROM users WHERE google_sub = ?", (sub,)).fetchone()
+        
+        if not db_user:
+            # Check by email
+            db_user = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email.lower(),)).fetchone()
+            if db_user:
+                # Merge sub ID
+                conn.execute("UPDATE users SET google_sub = ? WHERE id = ?", (sub, db_user['id']))
+                conn.commit()
+                db_user = conn.execute("SELECT * FROM users WHERE id = ?", (db_user['id'],)).fetchone()
+                
+        conn.close()
+        
+        if db_user and db_user['mobile']:
+            session['user_id'] = db_user['id']
+            session['email'] = db_user['email']
+            session['name'] = db_user['name']
+            session['role'] = db_user['role']
+            session.permanent = True
+            
+            next_url = session.pop('next_url', url_for('home'))
+            return redirect(next_url)
+        else:
+            session['pending_google_user'] = {
+                'email': email,
+                'name': name,
+                'sub': sub
+            }
+            return redirect(url_for('profile_setup_page'))
+            
+    except Exception as e:
+        print(f"OAuth error: {e}")
+        return redirect(url_for('login_page', error=f"Authentication failed: {str(e)}"))
+
+@app.route('/profile-setup', methods=['GET'])
+def profile_setup_page():
+    if 'pending_google_user' not in session:
+        if get_current_user():
+            return redirect(url_for('home'))
+        return redirect(url_for('login_page'))
+        
+    return render_template('profile_setup.html', name=session['pending_google_user']['name'])
+
+@app.route('/api/auth/profile-setup', methods=['POST'])
+def api_auth_profile_setup():
+    if 'pending_google_user' not in session:
+        return jsonify({'success': False, 'message': 'Session expired. Please sign in with Google again.'}), 401
+        
+    pending = session['pending_google_user']
+    
+    data = request.get_json() or {}
+    name = data.get('name', '').strip()
+    mobile = data.get('mobile', '').strip()
+    
+    if not name or not mobile:
+        return jsonify({'success': False, 'message': 'Name and Mobile number are required.'}), 400
+        
+    if not mobile.isdigit() or len(mobile) != 10:
+        return jsonify({'success': False, 'message': 'Invalid mobile number. It must be exactly 10 digits.'}), 400
+        
+    conn = database.get_db_connection()
+    try:
+        existing_email_user = conn.execute("SELECT id, email FROM users WHERE LOWER(email) = ?", (pending['email'].lower(),)).fetchone()
+        
+        check_query = "SELECT id FROM users WHERE mobile = ?"
+        check_params = [mobile]
+        if existing_email_user:
+            check_query += " AND id != ?"
+            check_params.append(existing_email_user['id'])
+            
+        duplicate_mobile = conn.execute(check_query, tuple(check_params)).fetchone()
+        if duplicate_mobile:
+            return jsonify({'success': False, 'message': 'Mobile number already registered by another account.'}), 400
+            
+        if existing_email_user:
+            conn.execute(
+                "UPDATE users SET name = ?, mobile = ?, google_sub = ? WHERE id = ?",
+                (name, mobile, pending['sub'], existing_email_user['id'])
+            )
+            user_id = existing_email_user['id']
+            user_role = 'user'
+        else:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO users (email, mobile, google_sub, name, role) VALUES (?, ?, ?, ?, 'user')",
+                (pending['email'], mobile, pending['sub'], name)
+            )
+            user_id = cursor.lastrowid
+            if not user_id:
+                row = conn.execute("SELECT id FROM users WHERE google_sub = ?", (pending['sub'],)).fetchone()
+                user_id = row['id']
+            user_role = 'user'
+            
+        conn.commit()
+        
+        session['user_id'] = user_id
+        session['email'] = pending['email']
+        session['name'] = name
+        session['role'] = user_role
+        session.permanent = True
+        
+        session.pop('pending_google_user', None)
+        
+        next_url = session.pop('next_url', url_for('booking_page'))
+        return jsonify({'success': True, 'message': 'Profile setup completed successfully!', 'next': next_url})
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
+    finally:
+        conn.close()
 
 @app.route('/profile')
 def profile_page():
@@ -205,44 +443,7 @@ def admin_login_page():
 # --- AUTHENTICATION API ---
 @app.route('/api/register', methods=['POST'])
 def api_register():
-    data = request.get_json() or {}
-    email = data.get('email', '').strip().lower()
-    mobile = data.get('mobile', '').strip()
-    password = data.get('password', '')
-    name = data.get('name', '').strip()
-    
-    if not email or not mobile or not password or not name:
-        return jsonify({'success': False, 'message': 'All fields are required.'}), 400
-        
-    conn = database.get_db_connection()
-    try:
-        # Check if user exists with same email or mobile
-        exists = conn.execute("SELECT id FROM users WHERE email = ? OR mobile = ?", (email, mobile)).fetchone()
-        if exists:
-            return jsonify({'success': False, 'message': 'Email or Mobile number already registered.'}), 400
-            
-        hashed_password = generate_password_hash(password)
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (email, mobile, password_hash, name, role) VALUES (?, ?, ?, ?, 'user')",
-            (email, mobile, hashed_password, name)
-        )
-        conn.commit()
-        
-        # Log them in automatically
-        user_id = cursor.lastrowid
-        session['user_id'] = user_id
-        session['email'] = email
-        session['name'] = name
-        session['role'] = 'user'
-        session.permanent = True
-        
-        return jsonify({'success': True, 'message': 'Registration successful!'})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
-    finally:
-        conn.close()
+    return jsonify({'success': False, 'message': 'Registration via email and password has been disabled. Please sign in with Google.'}), 403
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
@@ -252,6 +453,9 @@ def api_login():
     as_role = data.get('role', 'user') # 'user' or 'admin'
     remember = data.get('remember', False)
     
+    if as_role == 'user':
+        return jsonify({'success': False, 'message': 'Password login has been disabled for standard users. Please sign in with Google.'}), 403
+        
     if not identity or not password:
         return jsonify({'success': False, 'message': 'Email/Mobile and password are required.'}), 400
         
@@ -275,34 +479,9 @@ def api_login():
     return jsonify({'success': True, 'message': 'Login successful!', 'role': user['role']})
 
 
-
 @app.route('/api/forgot-password', methods=['POST'])
 def api_forgot_password():
-    data = request.get_json() or {}
-    identity = data.get('identity', '').strip()
-    new_password = data.get('new_password', '')
-    
-    if not identity or not new_password:
-        return jsonify({'success': False, 'message': 'Identity and new password are required.'}), 400
-        
-    if len(new_password) < 6:
-        return jsonify({'success': False, 'message': 'Password must be at least 6 characters.'}), 400
-        
-    conn = database.get_db_connection()
-    try:
-        user = conn.execute("SELECT id FROM users WHERE LOWER(email) = ? OR mobile = ?", (identity.lower(), identity)).fetchone()
-        if not user:
-            return jsonify({'success': False, 'message': 'User with this Email/Mobile number does not exist.'}), 404
-            
-        hashed_pw = generate_password_hash(new_password)
-        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hashed_pw, user['id']))
-        conn.commit()
-        return jsonify({'success': True, 'message': 'Password reset successfully!'})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
-    finally:
-        conn.close()
+    return jsonify({'success': False, 'message': 'Password reset is disabled.'}), 403
 
 @app.route('/api/profile/update', methods=['POST'])
 def api_profile_update():
@@ -574,7 +753,7 @@ def api_book_slot():
             
         # 2. Check if already booked (Double booking protection)
         existing_booking = conn.execute(
-            "SELECT id FROM bookings WHERE court_id = ? AND slot_id = ? AND booking_date = ? AND status = 'confirmed'",
+            "SELECT id FROM bookings WHERE court_id = ? AND slot_id = ? AND booking_date = ? AND status IN ('confirmed', 'pending_payment')",
             (court_id, slot_id, date_str)
         ).fetchone()
         if existing_booking:
@@ -668,6 +847,13 @@ def api_update_booking_payment_method():
         conn.commit()
         return jsonify({'success': True, 'message': 'Payment method updated successfully.'})
     except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        err_msg = str(e).lower()
+        if 'unique' in err_msg or 'duplicate key' in err_msg or (hasattr(e, 'pgcode') and e.pgcode == '23505'):
+            return jsonify({'success': False, 'message': 'This slot has already been booked and confirmed by another user.'}), 409
         return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
     finally:
         conn.close()

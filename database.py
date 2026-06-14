@@ -222,6 +222,19 @@ def init_db():
             conn.commit()
             print("Migration: Added payment_method column to bookings table.")
             
+        # 5. users table: google_sub
+        if not column_exists(cursor, 'users', 'google_sub'):
+            cursor.execute("ALTER TABLE users ADD COLUMN google_sub VARCHAR(255);")
+            cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub);")
+            conn.commit()
+            print("Migration: Added google_sub column to users table.")
+
+        # 6. users table: drop NOT NULL constraints
+        cursor.execute("ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;")
+        cursor.execute("ALTER TABLE users ALTER COLUMN mobile DROP NOT NULL;")
+        conn.commit()
+        print("Migration: Dropped NOT NULL constraints on password_hash and mobile in users table.")
+            
     except Exception as e:
         conn.rollback()
         print(f"Error during schema execution: {e}")
@@ -288,9 +301,8 @@ def init_db():
             conn.commit()
             print("Added 04:00 - 05:00 slot.")
         
-    # 3. Seed Default Accounts
+    # Seeding Default Accounts
     cursor.execute("SELECT COUNT(*) FROM users")
-    users_empty = cursor.fetchone()[0] == 0
     
     admin_email = os.environ.get("ADMIN_EMAIL", "admin@tristar.com")
     admin_mobile = os.environ.get("ADMIN_MOBILE", "9876543210")
@@ -320,17 +332,6 @@ def init_db():
         )
         conn.commit()
         print(f"Synced/updated admin credentials for {admin_email} from environment.")
-
-    if users_empty:
-        user_email = "user@tristar.com"
-        user_mobile = "9876543211"
-        user_pw_hash = generate_password_hash("user123")
-        cursor.execute(
-            "INSERT INTO users (email, mobile, password_hash, name, role) VALUES (?, ?, ?, ?, 'user')",
-            (user_email, user_mobile, user_pw_hash, "John Doe")
-        )
-        conn.commit()
-        print("Seeded Default User (user@tristar.com).")
         
     conn.close()
 

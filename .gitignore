@@ -19,3 +19,8 @@ venv/
 # Ignore local secrets
 .env
 scratch/
+
+# Ignore guide documents
+guide.md
+customization_guide.md
+vercel_deployment_guide.md
