@@ -580,17 +580,29 @@ function exportBookingsToExcel() {
         
         // Write XLSX file using binary array Blob for high compatibility on mobile and desktop
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
         const filename = `Tristar_Badminton_Bookings_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
         
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = blobUrl;
         link.download = filename;
+        
+        // Safari/Chrome on iOS requires target="_blank" and longer URL lifetime to prompt native downloads successfully
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            link.target = '_blank';
+        }
+        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+        
+        if (isIOS) {
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+        } else {
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+        }
     } catch (err) {
         console.error("SheetJS export failed:", err);
         window.showToast("Failed to export Excel file.", "error");
