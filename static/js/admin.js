@@ -2,6 +2,7 @@
 let activeEditSlotId = null;
 let activeReplyQueryId = null;
 let loadedQueries = [];
+let loadedBookingsLog = [];
 
 // Time Formatter for 12 hours representation
 function formatTimeTo12Hour(timeStr) {
@@ -400,6 +401,7 @@ function loadBookingsLog() {
         .then(data => {
             body.innerHTML = '';
             if (data.success) {
+                loadedBookingsLog = data.bookings;
                 if (data.bookings.length === 0) {
                     body.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No reservations found in the system database.</td></tr>';
                     return;
@@ -480,6 +482,21 @@ function loadBookingsLog() {
                                     <i class="fa-solid fa-file-arrow-down"></i> Agreement
                                 </button>
                             `;
+                        } else if (b.id < 1000000 && b.status === 'confirmed') {
+                            const isExpired = window.isSlotHourPassed ? window.isSlotHourPassed(b.date, b.time_range) : false;
+                            if (!isExpired) {
+                                agreementButton = `
+                                    <button class="btn-table-download" onclick="downloadHourlyReceipt(event, '${b.id}', '${b.date}', '${b.time_range}', ${b.members}, ${b.price}, '${escCourt}', '${b.created_at}', '${escName}', '${escEmail}', '${escMobile}', '${b.payment_method}')">
+                                        <i class="fa-solid fa-file-arrow-down"></i> Receipt
+                                    </button>
+                                `;
+                            } else {
+                                agreementButton = `
+                                    <button class="btn-table-download disabled" style="opacity: 0.5; cursor: not-allowed;" disabled title="Download expired after slot hour">
+                                        <i class="fa-solid fa-file-arrow-down"></i> Receipt
+                                    </button>
+                                `;
+                            }
                         }
 
                         body.innerHTML += `
@@ -512,6 +529,56 @@ function loadBookingsLog() {
             }
         })
         .catch(err => console.error(err));
+}
+
+function exportBookingsToExcel() {
+    if (!loadedBookingsLog || loadedBookingsLog.length === 0) {
+        window.showToast("No bookings to export.", "warning");
+        return;
+    }
+    
+    // Prepare CSV headers
+    const headers = ["Booking ID", "Date", "User Name", "Mobile", "Email", "Court Name", "Time Slot", "Players/Members", "Price (INR)", "Payment Method", "Status", "Created At", "Cancelled At"];
+    
+    // Format rows
+    const rows = loadedBookingsLog.map(b => [
+        b.id,
+        b.date,
+        b.user_name,
+        b.user_mobile || "—",
+        b.user_email || "—",
+        b.court_name,
+        b.time_range,
+        b.members,
+        b.price,
+        b.payment_method === 'offline' ? 'Offline' : 'Online (UPI)',
+        b.status.toUpperCase(),
+        b.created_at,
+        b.cancelled_at || "—"
+    ]);
+    
+    // Build CSV content with BOM for UTF-8 compatibility in Excel
+    const csvContent = "\uFEFF" + [
+        headers.join(","),
+        ...rows.map(row => row.map(val => {
+            let cell = String(val).replace(/"/g, '""');
+            if (cell.includes(",") || cell.includes('"') || cell.includes("\n")) {
+                cell = `"${cell}"`;
+            }
+            return cell;
+        }).join(","))
+    ].join("\r\n");
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Tristar_Badminton_Bookings_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function adminCancelBooking(bookingId) {
@@ -795,4 +862,24 @@ function downloadMembershipAgreement(event, membershipId, dateRange, timeSlot, d
     };
     
     window.downloadAgreementImage(details);
+}
+
+function downloadHourlyReceipt(event, bookingId, date, timeSlot, members, price, courtName, createdAt, userName, userEmail, userMobile, paymentMethod) {
+    if (event) event.preventDefault();
+    
+    const details = {
+        name: userName,
+        email: userEmail,
+        mobile: userMobile,
+        court_name: courtName,
+        time_range: formatTimeTo12Hour(timeSlot),
+        date: date,
+        num_members: members,
+        amount: price,
+        created_at: createdAt,
+        booking_id: bookingId,
+        payment_method: paymentMethod
+    };
+    
+    window.downloadReceiptImage(details);
 }

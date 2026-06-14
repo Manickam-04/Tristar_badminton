@@ -213,9 +213,14 @@
 
     <!-- PANEL 3: BOOKINGS LOG MONITOR -->
     <section class="admin-panel" id="admin-panel-bookings">
-        <div class="panel-section-title">
-            <h3>Complete Bookings History</h3>
-            <p>Review customer reservations and cancellations.</p>
+        <div class="panel-section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+            <div>
+                <h3>Complete Bookings History</h3>
+                <p>Review customer reservations and cancellations.</p>
+            </div>
+            <button class="btn-book-slot-cta btn-small" onclick="exportBookingsToExcel()" style="margin: 0; padding: 10px 20px; font-size: 14px;">
+                <i class="fa-solid fa-file-excel"></i> Export to Excel
+            </button>
         </div>
 
         <div class="glass-card">

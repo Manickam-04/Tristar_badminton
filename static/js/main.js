@@ -23,6 +23,11 @@ function initBookingPage() {
     const todayStr = localToday.toISOString().split('T')[0];
     datePicker.value = todayStr;
     datePicker.min = todayStr; // Prevent booking past dates
+    
+    // Limit booking date to 4 days ahead
+    const maxDate = new Date(localToday.getTime() + (4 * 24 * 60 * 60 * 1000));
+    const maxDateStr = maxDate.toISOString().split('T')[0];
+    datePicker.max = maxDateStr;
 
     // Hook listeners
     datePicker.addEventListener('change', loadLiveSlots);
@@ -449,6 +454,31 @@ function confirmOfflineBooking() {
         closeBookingModal('confirm');
 
         if (data.success) {
+            try {
+                const courtSelect = document.getElementById('booking-court-select');
+                const courtName = courtSelect && courtSelect.selectedIndex >= 0 ? courtSelect.options[courtSelect.selectedIndex].text : 'Tristar Court';
+                const timeSlotText = document.getElementById('modal-summary-time') ? document.getElementById('modal-summary-time').innerText : '';
+                const dateVal = document.getElementById('booking-date-picker') ? document.getElementById('booking-date-picker').value : '';
+                const playersCount = parseInt(document.getElementById('booking-members-count').value) || 2;
+                
+                const receiptDetails = {
+                    booking_id: currentBookingId,
+                    name: (window.currentUser && window.currentUser.name) ? window.currentUser.name : 'Anonymous Player',
+                    email: (window.currentUser && window.currentUser.email) ? window.currentUser.email : '',
+                    mobile: (window.currentUser && window.currentUser.mobile) ? window.currentUser.mobile : '',
+                    court_name: courtName,
+                    time_range: timeSlotText,
+                    date: dateVal,
+                    num_members: playersCount,
+                    amount: currentBookingPrice,
+                    created_at: new Date().toISOString(),
+                    payment_method: 'offline'
+                };
+                sessionStorage.setItem('pending_slot_receipt', JSON.stringify(receiptDetails));
+            } catch (err) {
+                console.error("Error setting pending receipt details:", err);
+            }
+
             sessionStorage.setItem('booking_success_msg', "Slot booked successfully (Pay after play)!");
             currentBookingId = null;
             selectedSlotId = null;

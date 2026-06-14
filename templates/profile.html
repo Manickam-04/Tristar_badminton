@@ -211,6 +211,26 @@
         window.downloadAgreementImage(details);
     }
 
+    function downloadReceiptFromCard(event, bookingId, date, timeSlot, members, price, courtName, createdAt, paymentMethod) {
+        if (event) event.preventDefault();
+        
+        const details = {
+            name: currentUser.name,
+            email: currentUser.email,
+            mobile: currentUser.mobile,
+            court_name: courtName,
+            time_range: formatTimeTo12Hour(timeSlot),
+            date: date,
+            num_members: members,
+            amount: price,
+            created_at: createdAt,
+            booking_id: bookingId,
+            payment_method: paymentMethod
+        };
+        
+        window.downloadReceiptImage(details);
+    }
+
     let activeCancelBookingId = null;
     let activeCancelBookingPaymentMethod = null;
 
@@ -374,6 +394,21 @@
                                     <i class="fa-solid fa-file-arrow-down"></i> Agreement
                                 </button>
                             `;
+                        } else if (b.type === 'hourly' && b.status === 'confirmed') {
+                            const isExpired = window.isSlotHourPassed ? window.isSlotHourPassed(b.date, b.time) : false;
+                            if (!isExpired) {
+                                downloadButton = `
+                                    <button class="btn-card-download" style="padding: 6px 12px; border-radius: var(--radius-sm); background: var(--color-accent); color: #061912; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="downloadReceiptFromCard(event, '${b.booking_id}', '${b.date}', '${b.time}', ${b.members}, ${b.price}, '${b.court_name.replace(/'/g, "\\'")}', '${b.created_at}', '${b.payment_method}')">
+                                        <i class="fa-solid fa-file-arrow-down"></i> Receipt
+                                    </button>
+                                `;
+                            } else {
+                                downloadButton = `
+                                    <button class="btn-card-download disabled" style="padding: 6px 12px; border-radius: var(--radius-sm); background: var(--text-secondary); color: var(--background-card); font-weight: 700; border: none; cursor: not-allowed; display: flex; align-items: center; gap: 6px; font-size: 13px; opacity: 0.5;" disabled title="Download expired after slot hour">
+                                        <i class="fa-solid fa-file-arrow-down"></i> Receipt
+                                    </button>
+                                `;
+                            }
                         }
 
                         if (b.status === 'cancelled') {

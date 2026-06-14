@@ -730,6 +730,8 @@ def api_book_slot():
         booking_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         if booking_date < get_local_today():
             return jsonify({'success': False, 'message': 'Cannot book slots in the past.'}), 400
+        if booking_date > get_local_today() + timedelta(days=4):
+            return jsonify({'success': False, 'message': 'Cannot book slots more than 4 days in advance.'}), 400
     except ValueError:
         return jsonify({'success': False, 'message': 'Invalid date format.'}), 400
         
