@@ -529,9 +529,12 @@
                             <span style="font-weight:700; font-size:16px; color:#10B981; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-file-invoice"></i> Agreement Ready</span>
                             <button class="close-overlay-btn" style="background:none; border:none; color:#94A3B8; font-size:26px; cursor:pointer; line-height:1; padding:0 5px;">&times;</button>
                         </div>
-                        <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5; text-align:center;">Press and hold (long-press) the image below to save it directly to your Photos or Gallery.</p>
+                        <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5; text-align:center;">Press and hold (long-press) the image below to save it directly to your Photos or Gallery, or tap the button below.</p>
                         <img src="${dataUrl}" alt="Membership Agreement" style="width:100%; max-height: 50vh; object-fit: contain; border-radius:8px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 15px 30px rgba(0,0,0,0.5); -webkit-touch-callout:default; pointer-events:auto;" />
-                        <button class="close-overlay-btn-bottom" style="padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
+                        <div style="display:flex; gap:10px; width:100%;">
+                            <button class="download-now-btn" style="flex:1; padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s; display:flex; align-items:center; justify-content:center; gap:6px;"><i class="fa-solid fa-file-arrow-down"></i> Download Now</button>
+                            <button class="close-overlay-btn-bottom" style="flex:1; padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:rgba(255, 255, 255, 0.1); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
+                        </div>
                     </div>
                 `;
                 
@@ -540,6 +543,7 @@
                 // Add event listeners to close the overlay preview
                 const closeBtn = overlay.querySelector('.close-overlay-btn');
                 const closeBtnBottom = overlay.querySelector('.close-overlay-btn-bottom');
+                const downloadBtn = overlay.querySelector('.download-now-btn');
                 
                 const removeOverlay = () => {
                     overlay.remove();
@@ -547,6 +551,39 @@
                 
                 closeBtn.addEventListener('click', removeOverlay);
                 closeBtnBottom.addEventListener('click', removeOverlay);
+                downloadBtn.addEventListener('click', () => {
+                    const filename = `Tristar_Membership_Agreement_${details.membership_id}.png`;
+                    if (window.fetch) {
+                        fetch(dataUrl)
+                            .then(res => res.blob())
+                            .then(blob => {
+                                const blobUrl = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.download = filename;
+                                link.href = blobUrl;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                            })
+                            .catch(err => {
+                                console.error("Blob download failed, falling back to dataUrl:", err);
+                                const link = document.createElement('a');
+                                link.download = filename;
+                                link.href = dataUrl;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            });
+                    } else {
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                });
             } else {
                 // Desktop browser: standard programmatic download anchor
                 const link = document.createElement('a');
@@ -763,9 +800,12 @@
                             <span style="font-weight:700; font-size:16px; color:#10B981; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-file-invoice"></i> Receipt Ready</span>
                             <button class="close-overlay-btn" style="background:none; border:none; color:#94A3B8; font-size:26px; cursor:pointer; line-height:1; padding:0 5px;">&times;</button>
                         </div>
-                        <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5; text-align:center;">Press and hold (long-press) the image below to save it directly to your Photos or Gallery.</p>
+                        <p style="font-size:13px; color:#94A3B8; margin:0; line-height:1.5; text-align:center;">Press and hold (long-press) the image below to save it directly to your Photos or Gallery, or tap the button below.</p>
                         <img src="${dataUrl}" alt="Booking Receipt" style="width:100%; max-height: 50vh; object-fit: contain; border-radius:8px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 15px 30px rgba(0,0,0,0.5); -webkit-touch-callout:default; pointer-events:auto;" />
-                        <button class="close-overlay-btn-bottom" style="padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
+                        <div style="display:flex; gap:10px; width:100%;">
+                            <button class="download-now-btn" style="flex:1; padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:#10B981; color:#061912; border:none; cursor:pointer; font-size:14px; transition:0.2s; display:flex; align-items:center; justify-content:center; gap:6px;"><i class="fa-solid fa-file-arrow-down"></i> Download Now</button>
+                            <button class="close-overlay-btn-bottom" style="flex:1; padding:12px 20px; font-family:'Outfit', sans-serif; font-weight:700; border-radius:8px; background:rgba(255, 255, 255, 0.1); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:14px; transition:0.2s;">Close Preview</button>
+                        </div>
                     </div>
                 `;
                 
@@ -774,6 +814,7 @@
                 // Add event listeners to close the overlay preview
                 const closeBtn = overlay.querySelector('.close-overlay-btn');
                 const closeBtnBottom = overlay.querySelector('.close-overlay-btn-bottom');
+                const downloadBtn = overlay.querySelector('.download-now-btn');
                 
                 const removeOverlay = () => {
                     overlay.remove();
@@ -781,6 +822,39 @@
                 
                 closeBtn.addEventListener('click', removeOverlay);
                 closeBtnBottom.addEventListener('click', removeOverlay);
+                downloadBtn.addEventListener('click', () => {
+                    const filename = `Tristar_Booking_Receipt_${details.booking_id}.png`;
+                    if (window.fetch) {
+                        fetch(dataUrl)
+                            .then(res => res.blob())
+                            .then(blob => {
+                                const blobUrl = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.download = filename;
+                                link.href = blobUrl;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                            })
+                            .catch(err => {
+                                console.error("Blob download failed, falling back to dataUrl:", err);
+                                const link = document.createElement('a');
+                                link.download = filename;
+                                link.href = dataUrl;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            });
+                    } else {
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                });
             } else {
                 // Desktop browser: standard programmatic download anchor
                 const link = document.createElement('a');

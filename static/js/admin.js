@@ -537,7 +537,7 @@ function exportBookingsToExcel() {
         return;
     }
     
-    // Prepare CSV headers
+    // Prepare Excel headers
     const headers = ["Booking ID", "Date", "User Name", "Mobile", "Email", "Court Name", "Time Slot", "Players/Members", "Price (INR)", "Payment Method", "Status", "Created At", "Cancelled At"];
     
     // Format rows
@@ -557,28 +557,44 @@ function exportBookingsToExcel() {
         b.cancelled_at || "—"
     ]);
     
-    // Build CSV content with BOM for UTF-8 compatibility in Excel
-    const csvContent = "\uFEFF" + [
-        headers.join(","),
-        ...rows.map(row => row.map(val => {
-            let cell = String(val).replace(/"/g, '""');
-            if (cell.includes(",") || cell.includes('"') || cell.includes("\n")) {
-                cell = `"${cell}"`;
-            }
-            return cell;
-        }).join(","))
-    ].join("\r\n");
-    
-    // Create download link
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Tristar_Badminton_Bookings_Export_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        // Create workbook and worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        
+        // Auto-fit column widths to ensure dates and mobile numbers are fully visible
+        const colWidths = headers.map((h, i) => {
+            let maxLen = h.length;
+            rows.forEach(row => {
+                const val = (row[i] !== undefined && row[i] !== null) ? String(row[i]) : '';
+                if (val.length > maxLen) {
+                    maxLen = val.length;
+                }
+            });
+            return { wch: maxLen + 3 }; // Add safety padding
+        });
+        ws['!cols'] = colWidths;
+        
+        // Append worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, "Bookings History");
+        
+        // Write XLSX file using binary array Blob for high compatibility on mobile and desktop
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const filename = `Tristar_Badminton_Bookings_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+        
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (err) {
+        console.error("SheetJS export failed:", err);
+        window.showToast("Failed to export Excel file.", "error");
+    }
 }
 
 function adminCancelBooking(bookingId) {
