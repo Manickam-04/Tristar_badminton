@@ -200,6 +200,10 @@ def login_google():
     if get_current_user():
         return redirect(url_for('home'))
         
+    client_id = (os.environ.get('GOOGLE_CLIENT_ID') or '').strip('\'" \t\r\n')
+    if not client_id:
+        return redirect(url_for('login_page', error="Google Client ID is not configured in environment variables. Please set GOOGLE_CLIENT_ID on Vercel."))
+        
     state = secrets.token_urlsafe(16)
     session['oauth_state'] = state
     
@@ -218,7 +222,7 @@ def login_google():
             redirect_uri = redirect_uri.replace('https://', 'http://', 1)
         
     params = {
-        'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+        'client_id': client_id,
         'redirect_uri': redirect_uri,
         'response_type': 'code',
         'scope': 'openid email profile',
@@ -257,10 +261,13 @@ def api_auth_callback():
         if not request.is_secure and redirect_uri.startswith('https://'):
             redirect_uri = redirect_uri.replace('https://', 'http://', 1)
         
+    client_id = (os.environ.get('GOOGLE_CLIENT_ID') or '').strip('\'" \t\r\n')
+    client_secret = (os.environ.get('GOOGLE_CLIENT_SECRET') or '').strip('\'" \t\r\n')
+    
     payload = {
         'code': code,
-        'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
-        'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
+        'client_id': client_id,
+        'client_secret': client_secret,
         'redirect_uri': redirect_uri,
         'grant_type': 'authorization_code'
     }

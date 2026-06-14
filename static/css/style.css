@@ -218,6 +218,15 @@ button {
     background: rgba(16, 185, 129, 0.05);
 }
 
+.user-name-text {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .admin-tag {
     background: var(--color-blocked);
     color: #1e1e1e;
@@ -2354,5 +2363,11 @@ select option {
         text-align: center !important;
         padding: 14px 20px !important;
         display: flex !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .user-name-text {
+        max-width: 70px;
     }
 }
