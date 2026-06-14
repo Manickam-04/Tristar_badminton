@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - Tristar Badminton Academy{% endblock %}
+
+{% block content %}
+<div class="main-wrapper" style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+    <div class="glass-card" style="padding: 40px; border-radius: var(--radius-md); line-height: 1.8;">
+        <h1 style="color: var(--color-accent); font-family: var(--font-heading); margin-bottom: 10px; font-size: 32px;">Privacy Policy</h1>
+        <p class="text-secondary" style="font-size: 14px; margin-bottom: 30px;">Last updated: June 14, 2026</p>
+        
+        <div class="policy-section" style="margin-bottom: 25px;">
+            <p>Welcome to Tristar Badminton Academy. We respect your privacy and are committed to protecting the personal data you share with us. This Privacy Policy explains how we collect, use, and safeguard your information when you use our website and slot booking application.</p>
+        </div>
+
+        <h3 style="color: var(--text-primary); margin: 25px 0 10px; font-size: 20px;">1. Information We Collect</h3>
+        <p class="text-secondary">We collect the following types of information to provide and improve our slot booking services:</p>
+        <ul style="color: var(--text-secondary); padding-left: 20px; margin-bottom: 20px;">
+            <li><strong>Personal Identifier Info:</strong> Email address, Full Name, and a 10-digit mobile number. We obtain this information when you sign in using Google OAuth 2.0 and complete your onboarding profile setup.</li>
+            <li><strong>Booking History Data:</strong> Date, court selections, slot timings, total pricing, and payment status associated with your slot reservations.</li>
+            <li><strong>Technical Metadata:</strong> Access times, cookies, browser types, and device configurations used during navigation.</li>
+        </ul>
+
+        <h3 style="color: var(--text-primary); margin: 25px 0 10px; font-size: 20px;">2. How We Use Your Information</h3>
+        <p class="text-secondary">We use the collected information for the following purposes:</p>
+        <ul style="color: var(--text-secondary); padding-left: 20px; margin-bottom: 20px;">
+            <li>To process, reserve, and manage your court bookings and schedule slots.</li>
+            <li>To communicate updates, pre-booking confirmations, or support responses to complaints.</li>
+            <li>To manage user authentication and ensure secure session routing through Google OAuth.</li>
+            <li>To maintain application safety and prevent fraudulent double-bookings.</li>
+        </ul>
+
+        <h3 style="color: var(--text-primary); margin: 25px 0 10px; font-size: 20px;">3. Data Protection & Retention</h3>
+        <p class="text-secondary">Your data is stored securely on our PostgreSQL databases hosted on cloud servers (Neon). We implement industry-standard database connection pooling, transactions, and encryption controls to safeguard your data.
+        Pending booking details are kept for 5 minutes, after which they are automatically purged if payment is not confirmed. Completed booking history is retained for user reference and accounting records.</p>
+
+        <h3 style="color: var(--text-primary); margin: 25px 0 10px; font-size: 20px;">4. Information Sharing</h3>
+        <p class="text-secondary">Tristar Badminton Academy does not sell, trade, or share your personal data with third-party marketing companies. Your data is shared only with Google (during OAuth authentication) and cloud database providers necessary to host the app.</p>
+
+        <h3 style="color: var(--text-primary); margin: 25px 0 10px; font-size: 20px;">5. Your Rights</h3>
+        <p class="text-secondary">You have the right to request access to your booking history, correct any profile details (such as updating your name or mobile number via your user dashboard), or request the deletion of your account. For any questions, please contact our support team.</p>
+
+        <h3 style="color: var(--text-primary); margin: 25px 0 10px; font-size: 20px;">6. Contact Us</h3>
+        <p class="text-secondary">If you have any questions or complaints regarding this Privacy Policy, you can reach us at:</p>
+        <p style="color: var(--color-accent); font-weight: bold; margin-top: 10px;">
+            Tristar Badminton Academy<br>
+            Email: contact@tristarbadminton.com<br>
+            Phone: +91 9994093575<br>
+            Address: 19, 2nd Floor, 3rd Street, Chellaperumal Nagar, Sriperumbudur, Tamil Nadu 602105
+        </p>
+    </div>
+</div>
+{% endblock %}

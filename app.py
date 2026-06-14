@@ -194,6 +194,16 @@ def login_page():
         
     return render_template('login.html')
 
+@app.route('/privacy-policy')
+def privacy_policy_page():
+    user = get_current_user()
+    return render_template('privacy_policy.html', user=user)
+
+@app.route('/terms-and-conditions')
+def terms_page():
+    user = get_current_user()
+    return render_template('terms.html', user=user)
+
 # --- GOOGLE OAUTH ROUTES ---
 @app.route('/login/google')
 def login_google():

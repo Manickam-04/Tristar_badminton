@@ -226,6 +226,11 @@
         </div>
         <div class="footer-bottom">
             <p>&copy; 2026 Tristar Badminton Academy. All rights reserved.</p>
+            <div class="footer-links" style="margin: 10px 0; display: flex; gap: 20px; justify-content: center; font-size: 14px;">
+                <a href="{{ url_for('privacy_policy_page') }}" style="color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-secondary)'">Privacy Policy</a>
+                <span class="text-muted">|</span>
+                <a href="{{ url_for('terms_page') }}" style="color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-secondary)'">Terms & Conditions</a>
+            </div>
             <p style="font-family: 'Outfit', sans-serif;">Built by MVTechnologies with Antigravity & Gemini 3.5, Manickavinayagam⚡</p>
         </div>
     </footer>
