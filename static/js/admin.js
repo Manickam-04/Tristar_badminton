@@ -1,6 +1,7 @@
 // Academy Admin Dashboard Controller logic
 let activeEditSlotId = null;
 let activeReplyQueryId = null;
+let loadedQueries = [];
 
 // Time Formatter for 12 hours representation
 function formatTimeTo12Hour(timeStr) {
@@ -543,6 +544,7 @@ function loadCustomerQueries() {
         .then(data => {
             container.innerHTML = '';
             if (data.success) {
+                loadedQueries = data.queries;
                 if (data.queries.length === 0) {
                     container.innerHTML = '<div class="dashboard-empty-state"><i class="fa-solid fa-check-double text-accent"></i><p>All clean! No query tickets raised.</p></div>';
                     return;
@@ -555,7 +557,7 @@ function loadCustomerQueries() {
                     let replyBlock = '';
                     if (q.status === 'pending') {
                         replyBlock = `
-                            <button class="btn-admin-reply" onclick="openReplyModal(${q.id}, '${q.user_name}', '${q.subject}', '${q.message}')">
+                            <button class="btn-admin-reply" onclick="openReplyModal(${q.id})">
                                 <i class="fa-solid fa-reply"></i> Compose Reply
                             </button>
                         `;
@@ -608,11 +610,13 @@ function updateQueryBadgeCount() {
         .catch(err => console.error(err));
 }
 
-function openReplyModal(queryId, userName, subject, message) {
+function openReplyModal(queryId) {
+    const q = loadedQueries.find(item => item.id === queryId);
+    if (!q) return;
     activeReplyQueryId = queryId;
-    document.getElementById('reply-modal-username').innerText = userName;
-    document.getElementById('reply-modal-subject').innerText = subject;
-    document.getElementById('reply-modal-complaint').innerText = `"${message}"`;
+    document.getElementById('reply-modal-username').innerText = q.user_name;
+    document.getElementById('reply-modal-subject').innerText = q.subject;
+    document.getElementById('reply-modal-complaint').innerText = `"${q.message}"`;
     document.getElementById('reply-modal-message').value = '';
 
     document.getElementById('modal-reply-query').classList.remove('hidden');
