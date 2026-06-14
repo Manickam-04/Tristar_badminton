@@ -70,11 +70,10 @@
             <a href="{{ url_for('home') }}" class="menu-item {% if request.path == '/' %}active{% endif %}">
                 <i class="fa-solid fa-house-chimney"></i> <span>Home</span>
             </a>
-            <a href="{{ url_for('home') }}#book-membership" class="menu-item">
-                <i class="fa-solid fa-id-card"></i> <span>Book Membership</span>
-            </a>
-            
             {% if user %}
+                <a href="{{ url_for('home') }}#book-membership" class="menu-item">
+                    <i class="fa-solid fa-id-card"></i> <span>Book Membership</span>
+                </a>
                 <a href="{{ url_for('booking_page') }}" class="menu-item {% if request.path == '/booking' %}active{% endif %}">
                     <i class="fa-solid fa-calendar-check"></i> <span>Book Slot</span>
                 </a>
