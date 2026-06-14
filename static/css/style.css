@@ -124,7 +124,7 @@ button {
     align-items: center;
     gap: 10px;
     box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    transition: var(--transition-smooth);
+    /* transition: var(--transition-smooth); */
 }
 
 /* .btn-book-slot-cta:hover {
@@ -139,9 +139,9 @@ button {
     border-radius: 6px;
 }
 
-.pulse {
+/* .pulse {
     animation: pulseGlow 2s infinite alternate;
-}
+} */
 
 @keyframes pulseGlow {
     0% {
