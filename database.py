@@ -234,6 +234,12 @@ def init_db():
         cursor.execute("ALTER TABLE users ALTER COLUMN mobile DROP NOT NULL;")
         conn.commit()
         print("Migration: Dropped NOT NULL constraints on password_hash and mobile in users table.")
+        
+        # 7. bookings table: cancellation_token
+        if not column_exists(cursor, 'bookings', 'cancellation_token'):
+            cursor.execute("ALTER TABLE bookings ADD COLUMN cancellation_token VARCHAR(255);")
+            conn.commit()
+            print("Migration: Added cancellation_token column to bookings table.")
             
     except Exception as e:
         conn.rollback()

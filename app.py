@@ -792,10 +792,11 @@ def api_book_slot():
         
         # 4. Insert booking
         initial_status = 'pending_payment'
+        cancel_token = secrets.token_urlsafe(16)
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO bookings (user_id, court_id, slot_id, booking_date, num_slots, num_members, total_price, status, payment_method) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)",
-            (user['id'], court_id, slot_id, date_str, num_members, total_price, initial_status, payment_method)
+            "INSERT INTO bookings (user_id, court_id, slot_id, booking_date, num_slots, num_members, total_price, status, payment_method, cancellation_token) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?)",
+            (user['id'], court_id, slot_id, date_str, num_members, total_price, initial_status, payment_method, cancel_token)
         )
         
         # Commit will unlock database
@@ -811,7 +812,8 @@ def api_book_slot():
                 'slot_id': slot_id,
                 'date': date_str,
                 'total_price': total_price,
-                'payment_method': payment_method
+                'payment_method': payment_method,
+                'cancellation_token': cancel_token
             }
         })
     except Exception as e:
@@ -1138,13 +1140,40 @@ def api_membership_eligible_slots():
 
 @app.route('/api/cancel', methods=['POST'])
 def api_cancel_booking():
-    authorized, user = login_required()
-    if not authorized:
-        return jsonify({'success': False, 'message': user}), 401
-        
     data = request.get_json() or {}
     booking_id = data.get('booking_id')
+    cancellation_token = data.get('cancellation_token')
     
+    # Check if we can authorize this cancel using the secure token
+    token_authorized = False
+    token_user_id = None
+    if booking_id and cancellation_token:
+        try:
+            booking_id_val = int(booking_id)
+        except (TypeError, ValueError):
+            booking_id_val = 0
+            
+        conn = database.get_db_connection()
+        try:
+            booking = conn.execute("SELECT cancellation_token, status, user_id FROM bookings WHERE id = ?", (booking_id_val,)).fetchone()
+            if booking and booking['status'] == 'pending_payment' and booking['cancellation_token'] == cancellation_token:
+                token_authorized = True
+                token_user_id = booking['user_id']
+        except Exception:
+            pass
+        finally:
+            conn.close()
+            
+    # Mock user if token is authorized, so we bypass login_required
+    user = None
+    if token_authorized:
+        user = {'role': 'user', 'id': token_user_id}
+    else:
+        authorized, logged_user = login_required()
+        if not authorized:
+            return jsonify({'success': False, 'message': logged_user}), 401
+        user = logged_user
+        
     if not booking_id:
         return jsonify({'success': False, 'message': 'Booking ID required.'}), 400
         

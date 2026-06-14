@@ -4,6 +4,7 @@ let selectedSlotPrice = 0.0;
 let activeCancelBookingId = null;
 let currentBookingId = null;
 let currentBookingPrice = 0.0;
+let currentCancelToken = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initBookingPage();
@@ -55,17 +56,19 @@ function initBookingPage() {
     const handleUnload = () => {
         if (currentBookingId && !hasSentCancel) {
             const bookingIdToCancel = currentBookingId;
+            const tokenToCancel = currentCancelToken;
             hasSentCancel = true;
             currentBookingId = null; // Clear immediately to prevent duplicate requests
+            currentCancelToken = null;
             
             if (navigator.sendBeacon) {
-                const blob = new Blob([JSON.stringify({ booking_id: bookingIdToCancel })], { type: 'application/json' });
+                const blob = new Blob([JSON.stringify({ booking_id: bookingIdToCancel, cancellation_token: tokenToCancel })], { type: 'application/json' });
                 navigator.sendBeacon('/api/cancel', blob);
             } else {
                 fetch('/api/cancel', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ booking_id: bookingIdToCancel }),
+                    body: JSON.stringify({ booking_id: bookingIdToCancel, cancellation_token: tokenToCancel }),
                     keepalive: true
                 });
             }
@@ -74,6 +77,11 @@ function initBookingPage() {
     window.addEventListener('pagehide', handleUnload);
     window.addEventListener('beforeunload', handleUnload);
     window.addEventListener('unload', handleUnload);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            handleUnload();
+        }
+    });
 
     // Auto-refresh the slots grid every 5 seconds for real-time updates
     const pollInterval = setInterval(() => {
@@ -347,6 +355,7 @@ function preBookSlotAndShowPaymentMethod() {
         if (data.success) {
             currentBookingId = data.booking.id;
             currentBookingPrice = data.booking.total_price;
+            currentCancelToken = data.booking.cancellation_token;
 
             // Transition to payment method selection modal
             document.getElementById('modal-confirm-booking').classList.add('hidden');
@@ -378,7 +387,7 @@ function cancelPreBooking(bookingId, showNotification = false) {
     fetch('/api/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: bookingId })
+        body: JSON.stringify({ booking_id: bookingId, cancellation_token: currentCancelToken })
     })
     .then(res => res.json())
     .then(data => {
@@ -400,6 +409,7 @@ function closePaymentMethodModal() {
     closeBookingModal('confirm');
     currentBookingId = null;
     selectedSlotId = null;
+    currentCancelToken = null;
 }
 
 function selectPaymentMethod(method) {
@@ -442,12 +452,14 @@ function confirmOfflineBooking() {
             sessionStorage.setItem('booking_success_msg', "Slot booked successfully (Pay after play)!");
             currentBookingId = null;
             selectedSlotId = null;
+            currentCancelToken = null;
             window.location.href = '/profile';
         } else {
             window.showToast(data.message || "Failed to complete booking.", 'error');
             cancelPreBooking(currentBookingId, true);
             currentBookingId = null;
             selectedSlotId = null;
+            currentCancelToken = null;
         }
     })
     .catch(err => {
@@ -461,6 +473,7 @@ function confirmOfflineBooking() {
             cancelPreBooking(currentBookingId, true);
             currentBookingId = null;
             selectedSlotId = null;
+            currentCancelToken = null;
         }
     });
 }
