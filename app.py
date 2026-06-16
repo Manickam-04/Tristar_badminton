@@ -1152,9 +1152,35 @@ def api_membership_eligible_slots():
 
 @app.route('/api/cancel', methods=['POST'])
 def api_cancel_booking():
-    data = request.get_json() or {}
+    # Attempt to retrieve from JSON
+    data = request.get_json(silent=True) or {}
+    
     booking_id = data.get('booking_id')
     cancellation_token = data.get('cancellation_token')
+    
+    # Fallback to form parameters or query parameters
+    if not booking_id:
+        booking_id = request.form.get('booking_id') or request.args.get('booking_id')
+    if not cancellation_token:
+        cancellation_token = request.form.get('cancellation_token') or request.args.get('cancellation_token')
+        
+    # Extra fallback: parse request.data if it contains query string parameters or raw JSON
+    if (not booking_id or not cancellation_token) and request.data:
+        try:
+            raw_str = request.data.decode('utf-8')
+            if raw_str.strip().startswith('{'):
+                raw_json = json.loads(raw_str)
+                booking_id = booking_id or raw_json.get('booking_id')
+                cancellation_token = cancellation_token or raw_json.get('cancellation_token')
+            else:
+                # Try parsing as form/query parameters
+                parsed = urllib.parse.parse_qs(raw_str)
+                if 'booking_id' in parsed:
+                    booking_id = booking_id or parsed['booking_id'][0]
+                if 'cancellation_token' in parsed:
+                    cancellation_token = cancellation_token or parsed['cancellation_token'][0]
+        except Exception:
+            pass
     
     # Check if we can authorize this cancel using the secure token
     token_authorized = False

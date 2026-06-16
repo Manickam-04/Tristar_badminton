@@ -16,6 +16,27 @@ function initBookingPage() {
 
     if (!datePicker || !courtSelect) return;
 
+    // Safety Net: Clean up any leaked booking reservations from localStorage on load
+    const pendingRelease = localStorage.getItem('pending_booking_release');
+    if (pendingRelease) {
+        try {
+            const parsed = JSON.parse(pendingRelease);
+            if (parsed && parsed.booking_id && parsed.cancellation_token) {
+                const params = new URLSearchParams();
+                params.append('booking_id', parsed.booking_id);
+                params.append('cancellation_token', parsed.cancellation_token);
+                fetch('/api/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                }).catch(err => console.error("Safety net release error:", err));
+            }
+        } catch (e) {
+            console.error("Error parsing pending booking release", e);
+        }
+        localStorage.removeItem('pending_booking_release');
+    }
+
     // Set default date to local TODAY (timezone aware)
     const today = new Date();
     const offset = today.getTimezoneOffset();
@@ -66,14 +87,17 @@ function initBookingPage() {
             currentBookingId = null; // Clear immediately to prevent duplicate requests
             currentCancelToken = null;
             
+            const params = new URLSearchParams();
+            params.append('booking_id', bookingIdToCancel);
+            params.append('cancellation_token', tokenToCancel);
+
             if (navigator.sendBeacon) {
-                const blob = new Blob([JSON.stringify({ booking_id: bookingIdToCancel, cancellation_token: tokenToCancel })], { type: 'application/json' });
-                navigator.sendBeacon('/api/cancel', blob);
+                navigator.sendBeacon('/api/cancel', params);
             } else {
                 fetch('/api/cancel', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ booking_id: bookingIdToCancel, cancellation_token: tokenToCancel }),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
                     keepalive: true
                 });
             }
@@ -82,11 +106,6 @@ function initBookingPage() {
     window.addEventListener('pagehide', handleUnload);
     window.addEventListener('beforeunload', handleUnload);
     window.addEventListener('unload', handleUnload);
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            handleUnload();
-        }
-    });
 
     // Auto-refresh the slots grid every 5 seconds for real-time updates
     const pollInterval = setInterval(() => {
@@ -362,6 +381,12 @@ function preBookSlotAndShowPaymentMethod() {
             currentBookingPrice = data.booking.total_price;
             currentCancelToken = data.booking.cancellation_token;
 
+            // Store in localStorage for safety net release on next page load/reload if browser closes unexpectedly
+            localStorage.setItem('pending_booking_release', JSON.stringify({
+                booking_id: data.booking.id,
+                cancellation_token: data.booking.cancellation_token
+            }));
+
             // Transition to payment method selection modal
             document.getElementById('modal-confirm-booking').classList.add('hidden');
             document.getElementById('modal-payment-method').classList.remove('hidden');
@@ -389,10 +414,18 @@ function preBookSlotAndShowPaymentMethod() {
 
 function cancelPreBooking(bookingId, showNotification = false) {
     if (!bookingId) return;
+
+    // Clear localStorage tracking immediately
+    localStorage.removeItem('pending_booking_release');
+
+    const params = new URLSearchParams();
+    params.append('booking_id', bookingId);
+    params.append('cancellation_token', currentCancelToken);
+
     fetch('/api/cancel', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: bookingId, cancellation_token: currentCancelToken })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
     })
     .then(res => res.json())
     .then(data => {
@@ -454,6 +487,8 @@ function confirmOfflineBooking() {
         closeBookingModal('confirm');
 
         if (data.success) {
+            // Clear localStorage tracking as booking is successfully completed
+            localStorage.removeItem('pending_booking_release');
             try {
                 const courtSelect = document.getElementById('booking-court-select');
                 const courtName = courtSelect && courtSelect.selectedIndex >= 0 ? courtSelect.options[courtSelect.selectedIndex].text : 'Tristar Court';
