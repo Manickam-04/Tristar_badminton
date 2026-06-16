@@ -101,6 +101,13 @@ function initBookingPage() {
                     keepalive: true
                 });
             }
+
+            // Synchronous delay (200ms) to allow mobile browsers to transmit the request
+            // before the operating system suspends the browser process or network sockets.
+            const start = Date.now();
+            while (Date.now() - start < 200) {
+                // Busy wait
+            }
         }
     };
     window.addEventListener('pagehide', handleUnload);
