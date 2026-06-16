@@ -5,6 +5,36 @@ let activeCancelBookingId = null;
 let currentBookingId = null;
 let currentBookingPrice = 0.0;
 let currentCancelToken = null;
+let bookingPingInterval = null;
+
+function startBookingPing(bookingId, cancelToken) {
+    stopBookingPing();
+    
+    const sendPing = () => {
+        const params = new URLSearchParams();
+        params.append('booking_id', bookingId);
+        params.append('cancellation_token', cancelToken);
+        
+        fetch('/api/book/ping', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        }).catch(err => console.error("Heartbeat ping failed:", err));
+    };
+    
+    // Send initial ping immediately
+    sendPing();
+    
+    // Repeat every 2 seconds
+    bookingPingInterval = setInterval(sendPing, 2000);
+}
+
+function stopBookingPing() {
+    if (bookingPingInterval) {
+        clearInterval(bookingPingInterval);
+        bookingPingInterval = null;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     initBookingPage();
@@ -394,6 +424,9 @@ function preBookSlotAndShowPaymentMethod() {
                 cancellation_token: data.booking.cancellation_token
             }));
 
+            // Start sending heartbeat pings to keep the reservation active
+            startBookingPing(data.booking.id, data.booking.cancellation_token);
+
             // Transition to payment method selection modal
             document.getElementById('modal-confirm-booking').classList.add('hidden');
             document.getElementById('modal-payment-method').classList.remove('hidden');
@@ -422,6 +455,9 @@ function preBookSlotAndShowPaymentMethod() {
 function cancelPreBooking(bookingId, showNotification = false) {
     if (!bookingId) return;
 
+    // Stop sending heartbeat pings
+    stopBookingPing();
+
     // Clear localStorage tracking immediately
     localStorage.removeItem('pending_booking_release');
 
@@ -446,6 +482,7 @@ function cancelPreBooking(bookingId, showNotification = false) {
 
 // Payment Selection Modal Handlers
 function closePaymentMethodModal() {
+    stopBookingPing(); // Stop heartbeat pings
     if (currentBookingId) {
         cancelPreBooking(currentBookingId, true);
     }
@@ -494,6 +531,8 @@ function confirmOfflineBooking() {
         closeBookingModal('confirm');
 
         if (data.success) {
+            // Stop heartbeat pings
+            stopBookingPing();
             // Clear localStorage tracking as booking is successfully completed
             localStorage.removeItem('pending_booking_release');
             try {

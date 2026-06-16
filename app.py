@@ -53,16 +53,16 @@ def start_booking_cleanup_scheduler():
         while True:
             try:
                 conn = database.get_db_connection()
-                # Delete bookings in 'pending_payment' status created more than 5 minutes ago
+                # Delete bookings in 'pending_payment' status that haven't sent a heartbeat/ping in the last 10 seconds
                 conn.execute(
-                    "DELETE FROM bookings WHERE status = 'pending_payment' AND created_at < NOW() - INTERVAL '5 minutes'"
+                    "DELETE FROM bookings WHERE status = 'pending_payment' AND created_at < NOW() - INTERVAL '10 seconds'"
                 )
                 conn.commit()
                 conn.close()
             except Exception as e:
                 print(f"Error in booking cleanup scheduler thread: {e}")
-            # Check every 60 seconds
-            time.sleep(60)
+            # Check every 3 seconds
+            time.sleep(3)
             
     thread = threading.Thread(target=cleanup_worker, daemon=True)
     thread.start()
@@ -567,6 +567,12 @@ def api_get_slots():
         
     conn = database.get_db_connection()
     try:
+        # Delete stale pending_payment bookings immediately to ensure accurate real-time availability grid
+        conn.execute(
+            "DELETE FROM bookings WHERE status = 'pending_payment' AND created_at < NOW() - INTERVAL '10 seconds'"
+        )
+        conn.commit()
+
         # Check if requested date is a weekend (5 = Saturday, 6 = Sunday)
         try:
             booking_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -831,6 +837,52 @@ def api_book_slot():
     except Exception as e:
         conn.rollback()
         return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/book/ping', methods=['POST'])
+def api_book_ping():
+    # Retrieve from JSON, form, or query parameters
+    data = request.get_json(silent=True) or {}
+    booking_id = data.get('booking_id')
+    cancellation_token = data.get('cancellation_token')
+    
+    if not booking_id:
+        booking_id = request.form.get('booking_id') or request.args.get('booking_id')
+    if not cancellation_token:
+        cancellation_token = request.form.get('cancellation_token') or request.args.get('cancellation_token')
+        
+    # Parse raw request body if necessary
+    if (not booking_id or not cancellation_token) and request.data:
+        try:
+            raw_str = request.data.decode('utf-8')
+            if raw_str.strip().startswith('{'):
+                raw_json = json.loads(raw_str)
+                booking_id = booking_id or raw_json.get('booking_id')
+                cancellation_token = cancellation_token or raw_json.get('cancellation_token')
+            else:
+                parsed = urllib.parse.parse_qs(raw_str)
+                if 'booking_id' in parsed:
+                    booking_id = booking_id or parsed['booking_id'][0]
+                if 'cancellation_token' in parsed:
+                    cancellation_token = cancellation_token or parsed['cancellation_token'][0]
+        except Exception:
+            pass
+
+    if not booking_id or not cancellation_token:
+        return jsonify({'success': False, 'message': 'Missing parameters'}), 400
+
+    conn = database.get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE bookings SET created_at = NOW() WHERE id = ? AND cancellation_token = ? AND status = 'pending_payment'",
+            (int(booking_id), cancellation_token)
+        )
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
     finally:
         conn.close()
 
